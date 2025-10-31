@@ -58,6 +58,12 @@ dependencies {
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mysql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Aop
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+
+    // Log
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
 }
 
 tasks.withType<Test> {
