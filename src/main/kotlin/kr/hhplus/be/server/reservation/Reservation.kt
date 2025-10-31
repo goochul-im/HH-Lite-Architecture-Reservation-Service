@@ -20,7 +20,7 @@ class Reservation(
     @Column(name = "reservation_date")
     var date: LocalDateTime,
     @Column(name = "seat_num")
-    var searNumber: Int,
+    var seatNumber: Int,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
