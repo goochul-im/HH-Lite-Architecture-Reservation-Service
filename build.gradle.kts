@@ -64,6 +64,9 @@ dependencies {
 
     // Log
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
+
+    // Redis
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
 tasks.withType<Test> {
