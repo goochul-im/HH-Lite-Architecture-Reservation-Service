@@ -37,3 +37,6 @@ spring:
     url: jdbc:mysql://localhost:3400/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
     username: hhplus
     password: hhplus
+
+waiting:
+  expiration_time: 5
