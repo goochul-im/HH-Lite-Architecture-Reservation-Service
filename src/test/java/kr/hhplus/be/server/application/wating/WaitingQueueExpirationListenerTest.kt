@@ -26,7 +26,7 @@ class WaitingQueueExpirationListenerTest {
     @AfterEach
     fun tearDown() {
         redisTemplate.delete(WaitingQueueConstant.ZSET_WAIT_KEY)
-        val keysToDelete = redisTemplate.keys("${WaitingQueueConstant.QUEUE_PREFIX}*")
+        val keysToDelete = redisTemplate.keys("${WaitingQueueConstant.WAITING_QUEUE}*")
         keysToDelete.addAll(redisTemplate.keys("${WaitingQueueConstant.CLEANUP_PREFIX}*"))
         if (keysToDelete.isNotEmpty()) {
             redisTemplate.delete(keysToDelete)
@@ -41,7 +41,7 @@ class WaitingQueueExpirationListenerTest {
         val num = 100
         val date = LocalDate.now()
 
-        val queueKey = WaitingQueueConstant.QUEUE_PREFIX + date.toString()
+        val queueKey = WaitingQueueConstant.WAITING_QUEUE + date.toString()
         val cleanupKey = WaitingQueueConstant.CLEANUP_PREFIX + date.toString()
         val zsetKey = WaitingQueueConstant.ZSET_WAIT_KEY
 

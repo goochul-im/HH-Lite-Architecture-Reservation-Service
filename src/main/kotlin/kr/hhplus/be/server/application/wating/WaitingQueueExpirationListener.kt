@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.application.wating
 
 import kr.hhplus.be.server.application.wating.WaitingQueueConstant.CLEANUP_PREFIX
-import kr.hhplus.be.server.application.wating.WaitingQueueConstant.QUEUE_PREFIX
+import kr.hhplus.be.server.application.wating.WaitingQueueConstant.WAITING_QUEUE
 import kr.hhplus.be.server.application.wating.WaitingQueueConstant.ZSET_WAIT_KEY
 import org.springframework.data.redis.connection.Message
 import org.springframework.data.redis.core.RedisTemplate
@@ -19,10 +19,10 @@ class WaitingQueueExpirationListener(
         val expiredKey = message.toString()
 
         // 예: 키가 'queue:2025-11-08' 형태인지 확인
-        if (expiredKey.startsWith(QUEUE_PREFIX)) {
+        if (expiredKey.startsWith(WAITING_QUEUE)) {
             println("만료된 대기열 키 감지: $expiredKey")
 
-            val dateSting = expiredKey.substringAfter(QUEUE_PREFIX)
+            val dateSting = expiredKey.substringAfter(WAITING_QUEUE)
             val cleanupKey = CLEANUP_PREFIX + dateSting
 
             val userIdsToRemove = redisJsonTemplate.opsForSet().members(cleanupKey)

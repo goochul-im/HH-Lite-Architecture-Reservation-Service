@@ -18,7 +18,7 @@ spring:
     generate-ddl: false
     show-sql: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
@@ -28,6 +28,8 @@ spring:
       host: localhost
       port: 6379
 
+jwt:
+  secret: V2hhdCBpcyB0aGUgYW5zd2VyIHRvIGxpZmUsIHRoZSB1bml2ZXJzZSwgYW5kIGV2ZXJ5dGhpbmc/IDQyIQ==
 
 ---
 spring.config.activate.on-profile: local, test
