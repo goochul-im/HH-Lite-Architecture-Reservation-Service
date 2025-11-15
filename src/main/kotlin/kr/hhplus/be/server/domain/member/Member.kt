@@ -19,6 +19,7 @@ class Member(
     @Column
     var password:String
 ) : BaseEntity() {
+
     fun chargePoint(amount: Int) {
         if (point + amount < 0) {
             TODO("예외처리")
@@ -26,5 +27,14 @@ class Member(
 
         this.point += amount
     }
+
+    fun usePoint(amount: Int) {
+        if (point < amount) {
+            TODO()
+        }
+
+        this.point -= amount
+    }
+
 }
 
