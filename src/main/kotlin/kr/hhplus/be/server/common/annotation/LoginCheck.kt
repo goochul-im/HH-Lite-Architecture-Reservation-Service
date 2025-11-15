@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.common.annotation
 
-import kr.hhplus.be.server.AuthConstant
+import kr.hhplus.be.server.auth.AuthConstant
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

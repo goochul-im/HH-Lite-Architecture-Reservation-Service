@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.reservation
+package kr.hhplus.be.server.domain.reservation
 
 import org.springframework.data.jpa.repository.JpaRepository
 

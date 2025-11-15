@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.auth
 
 import kr.hhplus.be.server.common.jwt.JwtProvider
-import kr.hhplus.be.server.member.MemberRepository
+import kr.hhplus.be.server.domain.member.MemberRepository
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
