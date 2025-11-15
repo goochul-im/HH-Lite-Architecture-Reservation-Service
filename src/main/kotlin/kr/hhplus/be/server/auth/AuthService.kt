@@ -1,7 +1,10 @@
 package kr.hhplus.be.server.auth
 
+import jakarta.persistence.EntityNotFoundException
 import kr.hhplus.be.server.common.jwt.JwtProvider
+import kr.hhplus.be.server.domain.member.Member
 import kr.hhplus.be.server.domain.member.MemberRepository
+import org.springframework.data.crossstore.ChangeSetPersister
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -24,5 +27,9 @@ class AuthService(
             ?: throw UsernameNotFoundException("User not found")
 
         return jwtProvider.createAccessToken(member.id!!)
+    }
+
+    fun getById(id: String): Member {
+        return memberRepository.findById(id).get() ?: throw EntityNotFoundException("ID ${id}에 해당하는 값을 찾을 수 없습니다")
     }
 }
