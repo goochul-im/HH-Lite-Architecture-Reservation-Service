@@ -1,0 +1,28 @@
+reservation:
+  pending-timeout-seconds: 1
+
+spring:
+  profiles:
+    active: test # 이 설정을 사용할 프로파일 이름
+  datasource:
+    # 인메모리 JDBC URL 설정 (MEM:testdb)
+    # 데이터베이스 이름은 'testdb'이며, JVM 메모리 내부에 저장됩니다.
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    # DB_CLOSE_DELAY=-1: 연결이 끊어져도 데이터베이스가 종료되지 않게 하여,
+    # 테스트 간에 데이터가 유지되도록 합니다.
+    username: sa
+    password:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    hibernate:
+      # DDL 생성 전략: create-drop을 사용하여 각 테스트 클래스 시작 시 테이블 생성/종료 시 삭제
+      # (혹은 validate를 사용하여 스키마가 미리 준비되어 있다고 가정할 수도 있습니다.)
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        # H2에서 SQL 로그 출력
+        show_sql: true
+        format_sql: true
+        # Dialect 설정 (H2가 사용하는 SQL 방언)
+        dialect: org.hibernate.dialect.H2Dialect
