@@ -14,15 +14,16 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
-    open-in-view: false
-    generate-ddl: false
-    show-sql: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
-      hibernate.timezone.default_storage: NORMALIZE_UTC
-      hibernate.jdbc.time_zone: UTC
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+    open-in-view: false
 
+reservation:
+  pending-timeout-seconds: 300
   data:
     redis:
       host: localhost
