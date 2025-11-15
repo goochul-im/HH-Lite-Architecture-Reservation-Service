@@ -5,6 +5,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import kr.hhplus.be.server.domain.BaseEntity
 
 @Entity
 class Member(
@@ -17,7 +18,7 @@ class Member(
     val username: String,
     @Column
     var password:String
-) {
+) : BaseEntity() {
     fun chargePoint(amount: Int) {
         if (point + amount < 0) {
             TODO("예외처리")

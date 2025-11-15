@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import kr.hhplus.be.server.domain.BaseEntity
 import kr.hhplus.be.server.domain.member.Member
 import java.time.LocalDateTime
 
@@ -25,4 +26,4 @@ class Reservation(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     var reserver: Member
-)
+) : BaseEntity()
