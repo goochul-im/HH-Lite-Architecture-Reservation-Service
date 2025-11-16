@@ -1,0 +1,14 @@
+package kr.hhplus.be.server.reservation.port
+
+import kr.hhplus.be.server.reservation.domain.Reservation
+import java.time.LocalDate
+
+interface TempReservationPort {
+
+    fun save(date: LocalDate, reservationId: Long, seatNumber: Int)
+
+    fun cleanupExpiredReservation(reservationId: Long)
+
+    fun getTempReservation(date: LocalDate): List<Int>
+
+}
