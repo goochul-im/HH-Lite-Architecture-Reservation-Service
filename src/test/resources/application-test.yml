@@ -2,8 +2,6 @@ reservation:
   pending-timeout-seconds: 1
 
 spring:
-  profiles:
-    active: test # 이 설정을 사용할 프로파일 이름
   datasource:
     # 인메모리 JDBC URL 설정 (MEM:testdb)
     # 데이터베이스 이름은 'testdb'이며, JVM 메모리 내부에 저장됩니다.
@@ -12,7 +10,7 @@ spring:
     # 테스트 간에 데이터가 유지되도록 합니다.
     username: sa
     password:
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    driver-class-name: org.h2.Driver
 
   jpa:
     hibernate:

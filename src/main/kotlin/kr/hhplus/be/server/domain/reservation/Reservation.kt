@@ -13,14 +13,13 @@ import jakarta.persistence.ManyToOne
 import kr.hhplus.be.server.domain.BaseEntity
 import kr.hhplus.be.server.domain.member.Member
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Entity
 class Reservation(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id : Long? = null,
+    val id: Long? = null,
     @Column(name = "reservation_date")
     var date: LocalDate,
     @Column(name = "seat_num")
@@ -31,7 +30,7 @@ class Reservation(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
-    var reserver: Member
+    var reserver: Member?
 ) : BaseEntity()
 
 

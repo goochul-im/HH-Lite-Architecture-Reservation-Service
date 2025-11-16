@@ -7,10 +7,10 @@ import java.time.LocalDate
 
 interface ReservationRepository : JpaRepository<Reservation, Long> {
 
-    @Query("select r from Reservation r " +
-            "where r.seatNumber = :seat and " +
+    @Query("select r.seatNumber from Reservation r " +
+            "where " +
             "r.date = :date and " +
             "r.status = 'RESERVE'")
-    fun getAvailableSeatNumber(@Param("seat") seatNumber: Int, @Param("date") date: LocalDate)
+    fun getReservedSeatnumber(@Param("date") date: LocalDate) : List<Int>
 
 }
