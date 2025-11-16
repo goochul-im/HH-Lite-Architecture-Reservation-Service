@@ -1,10 +1,12 @@
-package kr.hhplus.be.server.application.reservation
+package kr.hhplus.be.server.domain.reservation.service
 
 import jakarta.persistence.EntityNotFoundException
 import kr.hhplus.be.server.domain.member.Member
-import kr.hhplus.be.server.domain.reservation.Reservation
-import kr.hhplus.be.server.domain.reservation.ReservationRepository
-import kr.hhplus.be.server.domain.reservation.ReservationStatus
+import kr.hhplus.be.server.reservation.domain.Reservation
+import kr.hhplus.be.server.reservation.domain.ReservationRepository
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.service.TempReservationAdaptor
+import kr.hhplus.be.server.reservation.TempReservationConstant
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -21,10 +23,10 @@ import java.util.*
 
 @ActiveProfiles("test")
 @ExtendWith(MockitoExtension::class)
-class TempReservationComponentTest {
+class TempReservationAdaptorTest {
 
     @Mock
-    private lateinit var redisTemplate: RedisTemplate<String, Any>
+    private lateinit var redisTemplate: StringRedisTemplate
 
     @Mock
     private lateinit var reservationRepository: ReservationRepository
@@ -34,7 +36,7 @@ class TempReservationComponentTest {
     private lateinit var valueOperations: ValueOperations<String, Any>
 
     @Mock
-    private lateinit var setOperations: SetOperations<String, Any>
+    private lateinit var setOperations: SetOperations<String, String>
 
     @Mock
     private lateinit var redisOperations: RedisOperations<String, Any>
@@ -43,7 +45,7 @@ class TempReservationComponentTest {
     private lateinit var redisConnection: RedisConnection
 
     @InjectMocks
-    private lateinit var tempReservationComponent: TempReservationComponent
+    private lateinit var tempReservationAdaptor: TempReservationAdaptor
 
 
 //    @Test
@@ -97,11 +99,11 @@ class TempReservationComponentTest {
         given(redisTemplate.opsForSet()).willReturn(setOperations)
 
         // When
-        tempReservationComponent.cleanupExpiredReservation(reservationId)
+        tempReservationAdaptor.cleanupExpiredReservation(reservationId)
 
         // Then
         verify(reservationRepository).findById(reservationId)
-        verify(setOperations).remove(reserveKey, seatNumber)
+        verify(setOperations).remove(reserveKey, seatNumber.toString())
     }
 
     @Test
@@ -113,7 +115,7 @@ class TempReservationComponentTest {
 
         // When & Then
         assertThatThrownBy {
-            tempReservationComponent.cleanupExpiredReservation(reservationId)
+            tempReservationAdaptor.cleanupExpiredReservation(reservationId)
         }.isInstanceOf(EntityNotFoundException::class.java)
             .hasMessageContaining("${reservationId}를 가진 예약 정보를 조회할 수 없습니다.")
 

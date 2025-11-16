@@ -3,14 +3,14 @@ reservation:
 
 spring:
   datasource:
-    # 인메모리 JDBC URL 설정 (MEM:testdb)
-    # 데이터베이스 이름은 'testdb'이며, JVM 메모리 내부에 저장됩니다.
-    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
-    # DB_CLOSE_DELAY=-1: 연결이 끊어져도 데이터베이스가 종료되지 않게 하여,
-    # 테스트 간에 데이터가 유지되도록 합니다.
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+#    # 인메모리 JDBC URL 설정 (MEM:testdb)
+#    # 데이터베이스 이름은 'testdb'이며, JVM 메모리 내부에 저장됩니다.
+#    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+#    # DB_CLOSE_DELAY=-1: 연결이 끊어져도 데이터베이스가 종료되지 않게 하여,
+#    # 테스트 간에 데이터가 유지되도록 합니다.
+#    username: sa
+#    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
@@ -23,4 +23,4 @@ spring:
         show_sql: true
         format_sql: true
         # Dialect 설정 (H2가 사용하는 SQL 방언)
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.MySQLDialect

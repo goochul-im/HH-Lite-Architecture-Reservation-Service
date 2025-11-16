@@ -59,7 +59,7 @@ class TempReservationAdaptor (
 
         // 2. Redis Set에서 좌석 제거 (seats:reserved:날짜 에서 좌석 번호 제거)
         val reserveKey = "${TempReservationConstant.CHECK_SEAT}${reservation.date}"
-        redisTemplate.opsForSet().remove(reserveKey, reservation.seatNumber)
+        redisTemplate.opsForSet().remove(reserveKey, reservation.seatNumber.toString())
 
         // 3. RDB 예약 상태 변경 및 저장
         reservation.status = ReservationStatus.CANCEL

@@ -1,5 +1,9 @@
-package kr.hhplus.be.server.application.reservation
+package kr.hhplus.be.server.domain.reservation
 
+import kr.hhplus.be.server.reservation.service.TempReservationAdaptor
+import kr.hhplus.be.server.reservation.TempReservationConstant
+import kr.hhplus.be.server.reservation.TempReservationListener
+import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -20,7 +24,7 @@ class TempReservationListenerTest {
     private lateinit var container: RedisMessageListenerContainer
 
     @Mock
-    private lateinit var tempReservationComponent: TempReservationComponent
+    private lateinit var tempReservationAdaptor: TempReservationPort
 
     @InjectMocks
     private lateinit var tempReservationListener: TempReservationListener
@@ -50,7 +54,7 @@ class TempReservationListenerTest {
         tempReservationListener.onMessage(message, pattern)
 
         // Then
-        verify(tempReservationComponent).cleanupExpiredReservation(reservationId)
+        verify(tempReservationAdaptor).cleanupExpiredReservation(reservationId)
     }
 
     @Test
@@ -77,7 +81,7 @@ class TempReservationListenerTest {
         tempReservationListener.onMessage(message, pattern)
 
         // Then
-        verify(tempReservationComponent, times(0)).cleanupExpiredReservation(any(Long::class.java))
+        verify(tempReservationAdaptor, times(0)).cleanupExpiredReservation(any(Long::class.java))
     }
 
     @Test
@@ -102,7 +106,7 @@ class TempReservationListenerTest {
         val pattern = "test-pattern".toByteArray()
         val exception = RuntimeException("Test Exception")
 
-        given(tempReservationComponent.cleanupExpiredReservation(reservationId)).willThrow(exception)
+        given(tempReservationAdaptor.cleanupExpiredReservation(reservationId)).willThrow(exception)
 
         // When & Then
         assertThatThrownBy {
@@ -110,6 +114,6 @@ class TempReservationListenerTest {
         }.isInstanceOf(RuntimeException::class.java)
             .isEqualTo(exception)
 
-        verify(tempReservationComponent, times(1)).cleanupExpiredReservation(reservationId)
+        verify(tempReservationAdaptor, times(1)).cleanupExpiredReservation(reservationId)
     }
 }

@@ -1,11 +1,13 @@
-package kr.hhplus.be.server.application.reservation
+package kr.hhplus.be.server.domain.reservation.service
 
-import kr.hhplus.be.server.application.reservation.dto.ReservationRequest
+import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.auth.AuthService
 import kr.hhplus.be.server.domain.member.Member
-import kr.hhplus.be.server.domain.reservation.Reservation
-import kr.hhplus.be.server.domain.reservation.ReservationRepository
-import kr.hhplus.be.server.domain.reservation.ReservationStatus
+import kr.hhplus.be.server.reservation.domain.Reservation
+import kr.hhplus.be.server.reservation.domain.ReservationRepository
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.service.ReservationService
+import kr.hhplus.be.server.reservation.service.TempReservationAdaptor
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -23,7 +25,7 @@ class ReservationServiceTest {
     private lateinit var reservationRepository: ReservationRepository
 
     @Mock
-    private lateinit var tempReservationComponent: TempReservationComponent
+    private lateinit var tempReservationAdaptor: TempReservationAdaptor
 
     @Mock
     private lateinit var authService: AuthService
@@ -58,6 +60,6 @@ class ReservationServiceTest {
         // Then
         verify(authService).getById(memberId)
         verify(reservationRepository).save(any())
-        verify(tempReservationComponent).save(date, reservation.id!!, seatNumber)
+        verify(tempReservationAdaptor).save(date, reservation.id!!, seatNumber)
     }
 }
