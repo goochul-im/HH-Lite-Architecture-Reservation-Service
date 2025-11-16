@@ -53,7 +53,6 @@ dependencies {
 
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
-    testImplementation ("com.h2database:h2")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -62,6 +61,8 @@ dependencies {
 	testImplementation("org.testcontainers:mysql")
 	testImplementation("org.awaitility:awaitility-kotlin:4.2.1")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.testcontainers:testcontainers:1.17.2")
+    testImplementation ("com.h2database:h2")
 
     // Aop
     implementation("org.springframework.boot:spring-boot-starter-aop")
