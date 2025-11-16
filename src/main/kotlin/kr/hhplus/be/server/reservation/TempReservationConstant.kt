@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.reservation
+package kr.hhplus.be.server.reservation
 
 object TempReservationConstant {
     const val TEMP_RESERVATIONS = "temp:reservations:"

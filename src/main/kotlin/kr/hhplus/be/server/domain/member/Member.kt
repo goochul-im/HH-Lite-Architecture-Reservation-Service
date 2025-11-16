@@ -5,7 +5,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import kr.hhplus.be.server.domain.BaseEntity
+import kr.hhplus.be.server.common.BaseEntity
 
 @Entity
 class Member(

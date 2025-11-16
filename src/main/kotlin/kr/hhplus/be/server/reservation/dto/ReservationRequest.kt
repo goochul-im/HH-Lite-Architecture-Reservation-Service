@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.reservation.dto
+package kr.hhplus.be.server.reservation.dto
 
 import java.time.LocalDate
 
