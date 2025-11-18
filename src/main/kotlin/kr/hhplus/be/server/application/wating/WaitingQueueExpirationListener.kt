@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.application.wating
 
-import kr.hhplus.be.server.application.wating.WaitingQueueConstant.CLEANUP_PREFIX
-import kr.hhplus.be.server.application.wating.WaitingQueueConstant.WAITING_QUEUE
-import kr.hhplus.be.server.application.wating.WaitingQueueConstant.ZSET_WAIT_KEY
+import kr.hhplus.be.server.application.wating.WaitingQueueConstant.ENTER_LIST_KEY
 import org.springframework.data.redis.connection.Message
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.listener.KeyExpirationEventMessageListener
@@ -19,22 +17,8 @@ class WaitingQueueExpirationListener(
         val expiredKey = message.toString()
 
         // 예: 키가 'queue:2025-11-08' 형태인지 확인
-        if (expiredKey.startsWith(WAITING_QUEUE)) {
-            println("만료된 대기열 키 감지: $expiredKey")
+        if (expiredKey.startsWith(ENTER_LIST_KEY)) {
 
-            val dateSting = expiredKey.substringAfter(WAITING_QUEUE)
-            val cleanupKey = CLEANUP_PREFIX + dateSting
-
-            val userIdsToRemove = redisJsonTemplate.opsForSet().members(cleanupKey)
-
-            if (!userIdsToRemove.isNullOrEmpty()) {
-                println("만료된 대기열($expiredKey) Cleanup 시작. 제거 대상 ${userIdsToRemove.size}명.")
-
-                // 4. ZSet에서 해당 사용자 ID들을 제거 (ZREM)
-                redisJsonTemplate.opsForZSet().remove(ZSET_WAIT_KEY, *userIdsToRemove.toTypedArray())
-            }
-
-            redisJsonTemplate.delete(cleanupKey)
         }
 
     }

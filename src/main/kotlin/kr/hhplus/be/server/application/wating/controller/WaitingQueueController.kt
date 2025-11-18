@@ -1,5 +1,6 @@
-package kr.hhplus.be.server.application.wating
+package kr.hhplus.be.server.application.wating.controller
 
+import kr.hhplus.be.server.application.wating.service.WaitingQueueService
 import kr.hhplus.be.server.auth.TokenResponse
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
