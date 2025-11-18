@@ -11,4 +11,8 @@ interface TempReservationPort {
 
     fun getTempReservation(date: LocalDate): List<Int>
 
+    fun delete(reservationId: Long)
+
+    fun isValidReservation(reservationId: Long) : Boolean
+
 }

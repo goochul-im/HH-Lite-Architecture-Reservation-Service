@@ -3,6 +3,7 @@ package kr.hhplus.be.server.reservation.service
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import kr.hhplus.be.server.reservation.TempReservationConstant
+import kr.hhplus.be.server.reservation.domain.Reservation
 import kr.hhplus.be.server.reservation.domain.ReservationRepository
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.port.TempReservationPort
@@ -66,4 +67,13 @@ class TempReservationAdaptor (
         reservationRepository.save(reservation)
     }
 
+    override fun delete(reservationId: Long) {
+        val seatListKey = "${TempReservationConstant.TEMP_RESERVATIONS}$reservationId"
+        redisTemplate.delete(seatListKey)
+    }
+
+    override fun isValidReservation(reservationId: Long): Boolean {
+        val seatListKey = "${TempReservationConstant.TEMP_RESERVATIONS}$reservationId"
+        return redisTemplate.hasKey(seatListKey)
+    }
 }
