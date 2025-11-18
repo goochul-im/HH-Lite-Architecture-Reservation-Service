@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.auth.security
 
-import kr.hhplus.be.server.domain.member.Member
-import kr.hhplus.be.server.domain.member.MemberRepository
+import kr.hhplus.be.server.member.Member
+import kr.hhplus.be.server.member.MemberRepository
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService

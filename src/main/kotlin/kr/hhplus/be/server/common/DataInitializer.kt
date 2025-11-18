@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.common
 
-import kr.hhplus.be.server.domain.member.Member
-import kr.hhplus.be.server.domain.member.MemberRepository
+import kr.hhplus.be.server.member.Member
+import kr.hhplus.be.server.member.MemberRepository
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.security.crypto.password.PasswordEncoder

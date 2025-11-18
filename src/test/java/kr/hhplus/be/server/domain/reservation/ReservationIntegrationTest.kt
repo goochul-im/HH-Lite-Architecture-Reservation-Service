@@ -2,8 +2,8 @@ package kr.hhplus.be.server.domain.reservation
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
-import kr.hhplus.be.server.domain.member.Member
-import kr.hhplus.be.server.domain.member.MemberRepository
+import kr.hhplus.be.server.member.Member
+import kr.hhplus.be.server.member.MemberRepository
 import kr.hhplus.be.server.reservation.domain.ReservationRepository
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.service.ReservationService

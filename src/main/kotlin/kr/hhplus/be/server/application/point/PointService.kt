@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.application.point
 
 import kr.hhplus.be.server.auth.AuthService
-import kr.hhplus.be.server.domain.member.MemberRepository
 import org.springframework.stereotype.Service
 
 @Service

@@ -72,9 +72,6 @@ class JwtAuthenticationFilter(
             filterChain.doFilter(request, response)
         } catch (e: Exception) {
             SecurityContextHolder.clearContext()
-            // Exception handling will be delegated to AuthenticationEntryPoint
-            // For now, we let it be handled by the global exception handler or Spring Security's default.
-            // This will be properly configured in SecurityConfig.
             throw e
         }
     }

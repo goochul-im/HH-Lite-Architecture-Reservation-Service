@@ -42,4 +42,4 @@ spring:
     password: hhplus
 
 waiting:
-  expiration_time: 5
+  expiration-time-second: 300

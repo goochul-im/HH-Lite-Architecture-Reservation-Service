@@ -11,7 +11,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import kr.hhplus.be.server.common.BaseEntity
-import kr.hhplus.be.server.domain.member.Member
+import kr.hhplus.be.server.member.Member
 import java.time.LocalDate
 
 @Entity

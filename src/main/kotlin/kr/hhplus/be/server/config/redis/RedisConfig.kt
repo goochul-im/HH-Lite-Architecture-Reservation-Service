@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.GenericToStringSerializer
@@ -18,6 +19,11 @@ class RedisConfig(
     @param:Value("\${spring.data.redis.port}")
     private val port: Int
 ) {
+
+    @Bean
+    fun stringRedisTemplate(cf: RedisConnectionFactory) : StringRedisTemplate {
+        return StringRedisTemplate(cf)
+    }
 
     @Bean
     fun redisJsonTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<String, Any> {

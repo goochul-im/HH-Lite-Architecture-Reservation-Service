@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.domain.member
+package kr.hhplus.be.server.member
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

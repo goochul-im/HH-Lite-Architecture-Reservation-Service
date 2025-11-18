@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.domain.reservation.service
 
 import jakarta.persistence.EntityNotFoundException
-import kr.hhplus.be.server.domain.member.Member
+import kr.hhplus.be.server.member.Member
 import kr.hhplus.be.server.reservation.domain.Reservation
 import kr.hhplus.be.server.reservation.domain.ReservationRepository
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
