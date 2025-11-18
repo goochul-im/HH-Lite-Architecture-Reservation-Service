@@ -33,11 +33,11 @@ class RedisConfig(
         // Key는 LocalDate 문자열로 저장
         template.keySerializer = StringRedisSerializer()
         // Value는 객체를 JSON 문자열로 변환하여 저장
-        template.valueSerializer = GenericJackson2JsonRedisSerializer()
+        template.valueSerializer = StringRedisSerializer()
 
         // Hash Key/Value도 String과 JSON으로 설정하는 것이 일반적
         template.hashKeySerializer = StringRedisSerializer()
-        template.hashValueSerializer = GenericJackson2JsonRedisSerializer()
+        template.hashValueSerializer = StringRedisSerializer()
 
         template.afterPropertiesSet()
         return template

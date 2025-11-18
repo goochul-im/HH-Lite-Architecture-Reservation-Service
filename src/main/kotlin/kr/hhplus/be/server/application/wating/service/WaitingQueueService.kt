@@ -19,7 +19,17 @@ class WaitingQueueService(
         return jwtProvider.createWaitingToken(userId, UserStatus.WAIT)
     }
 
-    @Scheduled(fixedRate = 1000)
+    fun getMyRank(userId: String) : Long{
+        return waitingQueuePort.getMyRank(userId) ?: throw RuntimeException("대기열에 존재하지 않습니다")
+    }
+
+    fun isValidWaitingToken(userId: String): String {
+        if (!waitingQueuePort.isEnteringKey(userId))
+            throw RuntimeException("접속되어있는 대기열 토큰이 아닙니다")
+        return userId
+    }
+
+    @Scheduled(fixedRate = 10000)
     fun enterQueue() {
         waitingQueuePort.enteringQueue()
     }

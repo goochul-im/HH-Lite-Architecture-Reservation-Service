@@ -15,19 +15,22 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
         default_batch_fetch_size: 100
     open-in-view: false
 
-reservation:
-  pending-timeout-seconds: 300
   data:
     redis:
       host: localhost
       port: 6379
+
+reservation:
+  pending-timeout-seconds: 300
+  price: 10000
+
 
 jwt:
   secret: V2hhdCBpcyB0aGUgYW5zd2VyIHRvIGxpZmUsIHRoZSB1bml2ZXJzZSwgYW5kIGV2ZXJ5dGhpbmc/IDQyIQ==
