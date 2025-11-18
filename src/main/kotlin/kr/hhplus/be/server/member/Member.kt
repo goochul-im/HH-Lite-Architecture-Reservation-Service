@@ -21,16 +21,12 @@ class Member(
 ) : BaseEntity() {
 
     fun chargePoint(amount: Int) {
-        if (point + amount < 0) {
-            TODO("예외처리")
-        }
-
         this.point += amount
     }
 
     fun usePoint(amount: Int) {
         if (point < amount) {
-            TODO()
+            throw RuntimeException("잔액이 모자랍니다")
         }
 
         this.point -= amount
