@@ -8,12 +8,6 @@ class PointService(
     private val authService: AuthService
 ) {
 
-    fun pay(id: String, usePoint: Int) : Int {
-        val member = authService.getById(id)
-        member.usePoint(usePoint)
-        return member.point
-    }
-
     fun charge(id: String, chargePoint: Int) : Int {
         val member = authService.getById(id)
         member.chargePoint(chargePoint)

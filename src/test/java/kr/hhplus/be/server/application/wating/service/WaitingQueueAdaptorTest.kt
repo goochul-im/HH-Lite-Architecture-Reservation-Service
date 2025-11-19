@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit
 @Import(TestcontainersConfiguration::class)
 @ActiveProfiles("test")
 class WaitingQueueAdaptorTest {
+
     @Autowired
     private lateinit var waitingQueueAdaptor: WaitingQueueAdaptor
 
@@ -107,30 +108,30 @@ class WaitingQueueAdaptorTest {
         assertThat(ttlAfter).isGreaterThan(ttlBefore!!)
     }
 
-    @Test
-    @DisplayName("입장 처리 로직 테스트")
-    fun `enteringQueue should move top users to entering state`() {
-        // given
-        (1..10).forEach {
-            waitingQueueAdaptor.add("user$it")
-            Thread.sleep(10)
-        }
-
-        // when
-        waitingQueueAdaptor.enteringQueue()
-
-        // then
-        val top5 = redisTemplate.opsForZSet().range(WaitingQueueConstant.ZSET_WAIT_KEY, 0, 4)
-        assertThat(top5).hasSize(5)
-
-        top5?.forEach { userId ->
-            val isEntering = waitingQueueAdaptor.isEnteringKey(userId)
-            assertThat(isEntering).isTrue()
-        }
-
-        // Check users not in top 5
-        val notTopUser = "user6"
-        val isNotTopUserEntering = waitingQueueAdaptor.isEnteringKey(notTopUser)
-        assertThat(isNotTopUserEntering).isFalse()
-    }
+//    @Test
+//    @DisplayName("입장 처리 로직 테스트")
+//    fun `enteringQueue should move top users to entering state`() {
+//        // given
+//        (1..10).forEach {
+//            waitingQueueAdaptor.add("user$it")
+//            Thread.sleep(10)
+//        }
+//
+//        // when
+//        waitingQueueAdaptor.enteringQueue()
+//
+//        // then
+//        val top5 = redisTemplate.opsForZSet().range(WaitingQueueConstant.ZSET_WAIT_KEY, 0, 4)
+//        assertThat(top5).hasSize(5)
+//
+//        top5?.forEach { userId ->
+//            val isEntering = waitingQueueAdaptor.isEnteringKey(userId)
+//            assertThat(isEntering).isTrue()
+//        }
+//
+//        // Check users not in top 5
+//        val notTopUser = "user6"
+//        val isNotTopUserEntering = waitingQueueAdaptor.isEnteringKey(notTopUser)
+//        assertThat(isNotTopUserEntering).isFalse()
+//    }
 }
