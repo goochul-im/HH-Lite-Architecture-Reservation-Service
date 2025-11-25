@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.member.infrastructure
 
+import kr.hhplus.be.server.exception.ResourceNotFoundException
 import kr.hhplus.be.server.member.domain.Member
 import kr.hhplus.be.server.member.port.MemberRepository
 
@@ -9,12 +10,13 @@ class MemberRepositoryImpl(
 
     override fun findByUsername(username: String): Member {
         return toDomain(memberJpaRepository.findByUsername(username)
-            ?: throw RuntimeException("TODO"))
+            ?: throw ResourceNotFoundException("Member username : $username not found")
+        )
     }
 
     override fun findById(id: String): Member {
         val memberJpaEntity = memberJpaRepository.findById(id).orElseThrow {
-            RuntimeException("Member with id $id not found")
+            ResourceNotFoundException("Member id : $id not found")
         }
         return toDomain(memberJpaEntity)
     }
