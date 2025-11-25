@@ -1,6 +1,9 @@
 package kr.hhplus.be.server.auth
 
+import kr.hhplus.be.server.common.jwt.JwtProvider
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -9,13 +12,17 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/auth")
 class AuthController(
-    private val authService: AuthService
+    private val authenticationManager: AuthenticationManager,
+    private val jwtProvider: JwtProvider
 ) {
 
     @PostMapping("/login")
     fun login(@RequestBody request: LoginRequest): ResponseEntity<TokenResponse> {
-        val accessToken = authService.login(request)
-        return ResponseEntity.ok(TokenResponse(accessToken = accessToken))
+        val authentication = authenticationManager.authenticate(
+            UsernamePasswordAuthenticationToken(request.username, request.password)
+        )
+        val token = jwtProvider.createAccessToken(authentication.name)
+        return ResponseEntity.ok(TokenResponse(accessToken = token))
     }
 
 }
