@@ -13,8 +13,10 @@ class MemberRepositoryImpl(
     }
 
     override fun findById(id: String): Member {
-        return toDomain(memberJpaRepository.findById(id)
-            ?: throw RuntimeException("TODO"))
+        val memberJpaEntity = memberJpaRepository.findById(id).orElseThrow {
+            RuntimeException("Member with id $id not found")
+        }
+        return toDomain(memberJpaEntity)
     }
 
     private fun toDomain(memberEntity: MemberEntity): Member {
