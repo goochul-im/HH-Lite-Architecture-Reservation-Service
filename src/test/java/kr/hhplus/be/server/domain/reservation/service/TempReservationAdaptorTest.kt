@@ -68,7 +68,7 @@ class TempReservationAdaptorTest {
 
         // Then
         assertThat(result)
-            .isNotNull
+            .isNotNull()
             .isEqualTo(expectedSeats)
             .hasSize(3)
             .containsExactly(1, 2, 3)

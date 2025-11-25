@@ -16,17 +16,23 @@ class RedisReservationOperationsImpl(
         timeoutSeconds: Long
     ) {
         redisTemplate.executePipelined { connection ->
-            // 좌석 정보 저장 (TTL 포함)
-            connection.setEx(
-                seatListKey.toByteArray(),
+            val seatListKeyBytes = seatListKey.toByteArray()
+            val reserveKeyBytes = reserveKey.toByteArray()
+            val seatNumberBytes = seatNumber.toString().toByteArray()
+
+            // 1. setEx 대체: stringCommands().setEx() , String
+            connection.stringCommands().setEx(
+                seatListKeyBytes,
                 timeoutSeconds,
-                seatNumber.toString().toByteArray()
+                seatNumberBytes
             )
-            // 날짜별 예약 좌석 Set에 추가
-            connection.sAdd(
-                reserveKey.toByteArray(),
-                seatNumber.toString().toByteArray()
+
+            // 2. sAdd 대체: setCommands().sAdd() , Set
+            connection.setCommands().sAdd(
+                reserveKeyBytes,
+                seatNumberBytes
             )
+
             null
         }
     }
