@@ -3,6 +3,7 @@ package kr.hhplus.be.server.application.wating.service
 import kr.hhplus.be.server.application.wating.port.WaitingQueuePort
 import kr.hhplus.be.server.common.jwt.JwtProvider
 import kr.hhplus.be.server.auth.UserStatus
+import kr.hhplus.be.server.exception.WaitingQueueException
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
@@ -20,13 +21,13 @@ class WaitingQueueService(
     }
 
     fun getMyRank(userId: String) : Long{
-        return waitingQueuePort.getMyRank(userId) ?: throw RuntimeException("대기열에 존재하지 않습니다")
+        return waitingQueuePort.getMyRank(userId) ?: throw WaitingQueueException("대기열에 존재하지 않습니다")
     }
 
-    fun isValidWaitingToken(userId: String): String {
+    fun isValidWaitingToken(userId: String): Boolean {
         if (!waitingQueuePort.isEnteringKey(userId))
-            throw RuntimeException("접속되어있는 대기열 토큰이 아닙니다")
-        return userId
+            throw WaitingQueueException("접속되어있는 대기열 토큰이 아닙니다")
+        return true
     }
 
     @Scheduled(fixedRate = 10000)

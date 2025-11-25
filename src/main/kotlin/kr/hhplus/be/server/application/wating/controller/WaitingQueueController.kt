@@ -27,7 +27,7 @@ class WaitingQueueController(
     )
 
     @GetMapping("/check")
-    fun check(@AuthenticationPrincipal user: User): ResponseEntity<String> = ResponseEntity.ok(
+    fun check(@AuthenticationPrincipal user: User): ResponseEntity<*> = ResponseEntity.ok(
         waitingQueueService.isValidWaitingToken(user.username)
     )
 }
