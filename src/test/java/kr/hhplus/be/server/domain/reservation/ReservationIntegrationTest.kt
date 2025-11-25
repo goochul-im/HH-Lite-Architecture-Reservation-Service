@@ -2,8 +2,8 @@ package kr.hhplus.be.server.domain.reservation
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
-import kr.hhplus.be.server.member.Member
-import kr.hhplus.be.server.member.MemberRepository
+import kr.hhplus.be.server.member.infrastructure.MemberEntity
+import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
 import kr.hhplus.be.server.reservation.domain.ReservationRepository
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.service.ReservationService
@@ -30,7 +30,7 @@ class ReservationIntegrationTest {
     private lateinit var reservationService: ReservationService
 
     @Autowired
-    private lateinit var memberRepository: MemberRepository
+    private lateinit var memberJpaRepository: MemberJpaRepository
 
     @Autowired
     private lateinit var reservationRepository: ReservationRepository
@@ -38,17 +38,17 @@ class ReservationIntegrationTest {
     @Autowired
     private lateinit var redisTemplate: RedisTemplate<String, String>
 
-    private lateinit var testMember: Member
+    private lateinit var testMemberEntity: MemberEntity
 
     @BeforeEach
     fun setUp() {
         // 테스트 데이터 정리
         reservationRepository.deleteAll()
-        memberRepository.deleteAll()
+        memberJpaRepository.deleteAll()
         redisTemplate.connectionFactory?.connection?.flushAll()
 
         // 테스트용 사용자 생성
-        testMember = memberRepository.save(Member(username = "Test User", password = "password"))
+        testMemberEntity = memberJpaRepository.save(MemberEntity(username = "Test User", password = "password"))
     }
 
     @Test
@@ -57,7 +57,7 @@ class ReservationIntegrationTest {
         // Given: 예약 정보
         val date = LocalDate.now()
         val seatNumber = 25
-        val reservationRequest = ReservationRequest(date, testMember.id!!, seatNumber)
+        val reservationRequest = ReservationRequest(date, testMemberEntity.id!!, seatNumber)
 
         // When: 1. 예약을 생성한다. (만료 시간은 1초로 설정)
         reservationService.make(reservationRequest)

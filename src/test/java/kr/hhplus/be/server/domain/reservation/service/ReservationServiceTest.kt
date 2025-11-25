@@ -2,13 +2,12 @@ package kr.hhplus.be.server.domain.reservation.service
 
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.auth.AuthService
-import kr.hhplus.be.server.member.Member
+import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.reservation.domain.Reservation
 import kr.hhplus.be.server.reservation.domain.ReservationRepository
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import kr.hhplus.be.server.reservation.service.ReservationService
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -54,16 +53,16 @@ class ReservationServiceTest {
         val seatNumber = 5
         val request = ReservationRequest(date, memberId, seatNumber)
 
-        val member = Member(id = memberId, username = "Test User", password = "testpassword")
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword")
         val reservation = Reservation(
             id = 1L,
             date = date,
             seatNumber = seatNumber,
             status = ReservationStatus.PENDING,
-            reserver = member
+            reserver = memberEntity
         )
 
-        given(authService.getById(memberId)).willReturn(member)
+        given(authService.getById(memberId)).willReturn(memberEntity)
         given(reservationRepository.save(any())).willReturn(reservation)
 
         // When
@@ -108,18 +107,18 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
-        val member = Member(id = memberId, username = "Test User", password = "testpassword", point = 10000)
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 10000)
         val reservation = Reservation(
             reservationId,
             LocalDate.of(2025, 11, 18),
             10,
             ReservationStatus.PENDING,
-            member
+            memberEntity
         )
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
-        given(authService.getById(memberId)).willReturn(member)
-        given(reservationRepository.findReservationByIdAndReserver(reservationId, member)).willReturn(reservation)
+        given(authService.getById(memberId)).willReturn(memberEntity)
+        given(reservationRepository.findReservationByIdAndReserver(reservationId, memberEntity)).willReturn(reservation)
 
         //when
         val result = reservationService.payReservation(reservationId, memberId)
@@ -142,18 +141,18 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
-        val member = Member(id = memberId, username = "Test User", password = "testpassword", point = 500)
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 500)
         val reservation = Reservation(
             reservationId,
             LocalDate.of(2025, 11, 18),
             10,
             ReservationStatus.PENDING,
-            member
+            memberEntity
         )
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
-        given(authService.getById(memberId)).willReturn(member)
-        given(reservationRepository.findReservationByIdAndReserver(reservationId, member)).willReturn(reservation)
+        given(authService.getById(memberId)).willReturn(memberEntity)
+        given(reservationRepository.findReservationByIdAndReserver(reservationId, memberEntity)).willReturn(reservation)
 
         //when & then
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
@@ -182,10 +181,10 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
-        val member = Member(id = memberId, username = "Test User", password = "testpassword", point = 10000)
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 10000)
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
-        given(authService.getById(memberId)).willReturn(member)
+        given(authService.getById(memberId)).willReturn(memberEntity)
 
         //when & then
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
@@ -199,11 +198,11 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
-        val member = Member(id = memberId, username = "Test User", password = "testpassword", point = 10000)
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 10000)
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
-        given(authService.getById(memberId)).willReturn(member)
-        given(reservationRepository.findReservationByIdAndReserver(reservationId, member)).willReturn(null)
+        given(authService.getById(memberId)).willReturn(memberEntity)
+        given(reservationRepository.findReservationByIdAndReserver(reservationId, memberEntity)).willReturn(null)
 
         //when & then
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(

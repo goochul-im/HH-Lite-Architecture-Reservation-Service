@@ -1,28 +1,19 @@
 package kr.hhplus.be.server.domain.reservation.service
 
 import jakarta.persistence.EntityNotFoundException
-import kr.hhplus.be.server.member.Member
 import kr.hhplus.be.server.reservation.domain.Reservation
 import kr.hhplus.be.server.reservation.domain.ReservationRepository
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.service.TempReservationAdaptor
-import kr.hhplus.be.server.reservation.TempReservationConstant
-import kr.hhplus.be.server.reservation.service.RedisReservationOperationsImpl
 import kr.hhplus.be.server.reservation.service.port.RedisReservationOperations
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.*
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.data.redis.connection.RedisConnection
-import org.springframework.data.redis.core.*
-import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDate
 import java.util.*
 

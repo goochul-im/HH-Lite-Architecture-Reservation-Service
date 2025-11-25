@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.member
+package kr.hhplus.be.server.member.infrastructure
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -8,7 +8,7 @@ import jakarta.persistence.Id
 import kr.hhplus.be.server.common.BaseEntity
 
 @Entity
-class Member(
+class MemberEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: String? = null,
