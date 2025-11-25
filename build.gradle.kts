@@ -63,6 +63,7 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.testcontainers:testcontainers:1.17.2")
     testImplementation ("com.h2database:h2")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
 
     // Aop
     implementation("org.springframework.boot:spring-boot-starter-aop")

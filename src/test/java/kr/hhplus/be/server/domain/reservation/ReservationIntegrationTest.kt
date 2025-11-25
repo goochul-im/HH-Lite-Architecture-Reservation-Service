@@ -4,8 +4,8 @@ import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
-import kr.hhplus.be.server.reservation.domain.ReservationRepository
-import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
+import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.service.ReservationService
 import kr.hhplus.be.server.reservation.TempReservationConstant
 import org.assertj.core.api.Assertions.assertThat
@@ -33,7 +33,7 @@ class ReservationIntegrationTest {
     private lateinit var memberJpaRepository: MemberJpaRepository
 
     @Autowired
-    private lateinit var reservationRepository: ReservationRepository
+    private lateinit var reservationJpaRepository: ReservationJpaRepository
 
     @Autowired
     private lateinit var redisTemplate: RedisTemplate<String, String>
@@ -43,7 +43,7 @@ class ReservationIntegrationTest {
     @BeforeEach
     fun setUp() {
         // 테스트 데이터 정리
-        reservationRepository.deleteAll()
+        reservationJpaRepository.deleteAll()
         memberJpaRepository.deleteAll()
         redisTemplate.connectionFactory?.connection?.flushAll()
 
@@ -63,7 +63,7 @@ class ReservationIntegrationTest {
         reservationService.make(reservationRequest)
 
         // Then: 2. DB와 Redis에 예약 정보가 올바르게 저장되었는지 확인한다.
-        val savedReservation = reservationRepository.findAll().firstOrNull()
+        val savedReservation = reservationJpaRepository.findAll().firstOrNull()
         assertThat(savedReservation).isNotNull()
         assertThat(savedReservation?.status).isEqualTo(ReservationStatus.PENDING)
 
@@ -76,13 +76,13 @@ class ReservationIntegrationTest {
 
         // When: 3. 예약이 만료될 때까지 기다린다. (awaitility 사용)
         await.atMost(Duration.ofSeconds(5)).untilAsserted {
-            val expiredReservation = reservationRepository.findById(reservationId).orElse(null)
+            val expiredReservation = reservationJpaRepository.findById(reservationId).orElse(null)
             assertThat(expiredReservation).isNotNull()
             assertThat(expiredReservation?.status).isEqualTo(ReservationStatus.CANCEL)
         }
 
         // Then: 4. 예약 만료 후 DB와 Redis의 데이터가 정상적으로 정리되었는지 확인한다.
-        val finalReservation = reservationRepository.findById(reservationId).get()
+        val finalReservation = reservationJpaRepository.findById(reservationId).get()
         assertThat(finalReservation.status).isEqualTo(ReservationStatus.CANCEL)
         assertThat(redisTemplate.hasKey(seatListKey)).isFalse()
         assertThat(redisTemplate.opsForSet().isMember(reserveKey, seatNumber.toString())).isFalse()

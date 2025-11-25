@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import kr.hhplus.be.server.common.BaseEntity
+import kr.hhplus.be.server.member.domain.Member
 
 @Entity
 class MemberEntity(
@@ -17,19 +18,29 @@ class MemberEntity(
     @Column
     val username: String,
     @Column
-    var password:String
+    var password: String
 ) : BaseEntity() {
 
-    fun chargePoint(amount: Int) {
-        this.point += amount
+    public fun toDomain(): Member {
+        return Member(
+            this.id,
+            this.point,
+            this.username,
+            this.password,
+        )
     }
 
-    fun usePoint(amount: Int) {
-        if (point < amount) {
-            throw RuntimeException("잔액이 모자랍니다")
+    companion object{
+
+        fun from(member: Member): MemberEntity {
+            return MemberEntity(
+                member.id,
+                member.point,
+                member.username,
+                member.password
+            )
         }
 
-        this.point -= amount
     }
 
 }

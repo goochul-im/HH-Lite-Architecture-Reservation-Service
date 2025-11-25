@@ -8,4 +8,6 @@ interface MemberRepository {
 
     fun findById(id: String) : Member
 
+    fun save(member: Member) : Member
+
 }

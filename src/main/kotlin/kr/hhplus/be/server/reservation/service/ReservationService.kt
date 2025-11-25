@@ -1,11 +1,13 @@
 package kr.hhplus.be.server.reservation.service
 
 import jakarta.transaction.Transactional
-import kr.hhplus.be.server.auth.AuthService
+import kr.hhplus.be.server.member.infrastructure.MemberEntity
+import kr.hhplus.be.server.member.port.MemberRepository
 import kr.hhplus.be.server.reservation.domain.Reservation
-import kr.hhplus.be.server.reservation.domain.ReservationRepository
-import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
+import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
+import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -15,7 +17,7 @@ import java.time.LocalDate
 class ReservationService(
     private val reservationRepository: ReservationRepository,
     private val tempReservationService: TempReservationPort,
-    private val authService: AuthService,
+    private val memberRepository: MemberRepository,
     @param:Value("\${reservation.price}")
     private val price: Int,
 ) {
@@ -30,15 +32,15 @@ class ReservationService(
             date = dto.date,
             seatNumber = dto.seatNumber,
             status = ReservationStatus.PENDING,
-            reserver = authService.getById(dto.memberId)
+            reserver = memberRepository.findById(dto.memberId)
         )
 
-        val saveEntity = reservationRepository.save(reservation)
-        tempReservationService.save(dto.date, saveEntity.id!!, saveEntity.seatNumber)
+        val save = ReservationEntity.from(reservationRepository.save(reservation))
+        tempReservationService.save(dto.date, save.id!!, reservation.seatNumber)
     }
 
     fun getAvailableSeat(date: LocalDate): List<Int> {
-        val seatInPersistent = reservationRepository.getReservedSeatnumber(date).toSet()
+        val seatInPersistent = reservationRepository.getReservedSeatNumber(date).toSet()
         val seatInTemp = tempReservationService.getTempReservation(date).toSet()
 
         val availableSeat = (1..50).filter { !seatInPersistent.contains(it) && !seatInTemp.contains(it) }
@@ -51,15 +53,19 @@ class ReservationService(
         if (!tempReservationService.isValidReservation(reservationId)) {
             throw RuntimeException("예약된 자리가 아닙니다.")
         }
-        val reserver = authService.getById(userId)
-        val reservation =
-            reservationRepository.findReservationByIdAndReserver(reservationId, reserver) ?: throw RuntimeException("예약을 찾을 수 없습니다")
+        var reserver = memberRepository.findById(userId)
+        var reservation =
+            reservationRepository.findReservationByIdAndReserver(reservationId, reserver.id!!)
         if (reservation.status != ReservationStatus.PENDING) {
             throw RuntimeException("예약한 자리가 아닙니다.")
         }
 
         reserver.usePoint(price)
+        reserver = memberRepository.save(reserver)
+        reservation.reserver = reserver
+
         reservation.status = ReservationStatus.RESERVE
+        reservation = reservationRepository.save(reservation)
         tempReservationService.delete(reservationId)
 
         return reservation

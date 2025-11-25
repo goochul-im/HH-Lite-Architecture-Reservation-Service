@@ -3,13 +3,15 @@ package kr.hhplus.be.server.member.infrastructure
 import kr.hhplus.be.server.exception.ResourceNotFoundException
 import kr.hhplus.be.server.member.domain.Member
 import kr.hhplus.be.server.member.port.MemberRepository
+import org.springframework.stereotype.Repository
 
+@Repository
 class MemberRepositoryImpl(
     val memberJpaRepository: MemberJpaRepository
 ) : MemberRepository{
 
     override fun findByUsername(username: String): Member {
-        return toDomain(memberJpaRepository.findByUsername(username)
+        return (memberJpaRepository.findByUsername(username)?.toDomain()
             ?: throw ResourceNotFoundException("Member username : $username not found")
         )
     }
@@ -18,15 +20,10 @@ class MemberRepositoryImpl(
         val memberJpaEntity = memberJpaRepository.findById(id).orElseThrow {
             ResourceNotFoundException("Member id : $id not found")
         }
-        return toDomain(memberJpaEntity)
+        return memberJpaEntity.toDomain()
     }
 
-    private fun toDomain(memberEntity: MemberEntity): Member {
-        return Member(
-            memberEntity.id,
-            memberEntity.point,
-            memberEntity.username,
-            memberEntity.password,
-        )
+    override fun save(member: Member): Member {
+        return memberJpaRepository.save(MemberEntity.from(member)).toDomain()
     }
 }

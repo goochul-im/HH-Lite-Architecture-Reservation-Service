@@ -3,20 +3,18 @@ package kr.hhplus.be.server.reservation.service
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import kr.hhplus.be.server.reservation.TempReservationConstant
-import kr.hhplus.be.server.reservation.domain.ReservationRepository
-import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
+import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import kr.hhplus.be.server.reservation.service.port.RedisReservationOperations
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
-import java.time.Duration
 import java.time.LocalDate
 
 @Component
 class TempReservationAdaptor(
     private val redisOperations: RedisReservationOperations,
-    private val reservationRepository: ReservationRepository,
+    private val reservationJpaRepository: ReservationJpaRepository,
 ) : TempReservationPort {
 
     @Value("\${reservation.pending-timeout-seconds}")
@@ -42,7 +40,7 @@ class TempReservationAdaptor(
     @Transactional
     override fun cleanupExpiredReservation(reservationId: Long) {
         // 1. RDB에서 예약 정보 조회
-        val reservation = reservationRepository.findById(reservationId).orElseThrow {
+        val reservation = reservationJpaRepository.findById(reservationId).orElseThrow {
             throw EntityNotFoundException("${reservationId}를 가진 예약 정보를 조회할 수 없습니다.")
         }
 
@@ -52,7 +50,7 @@ class TempReservationAdaptor(
 
         // 3. RDB 예약 상태 변경
         reservation.status = ReservationStatus.CANCEL
-        reservationRepository.save(reservation)
+        reservationJpaRepository.save(reservation)
     }
 
     override fun delete(reservationId: Long) {
