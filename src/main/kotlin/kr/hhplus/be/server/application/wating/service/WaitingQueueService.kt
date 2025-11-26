@@ -1,6 +1,6 @@
 package kr.hhplus.be.server.application.wating.service
 
-import kr.hhplus.be.server.application.wating.port.WaitingQueuePort
+import kr.hhplus.be.server.application.wating.service.port.WaitingQueuePort
 import kr.hhplus.be.server.common.jwt.JwtProvider
 import kr.hhplus.be.server.auth.UserStatus
 import kr.hhplus.be.server.exception.WaitingQueueException

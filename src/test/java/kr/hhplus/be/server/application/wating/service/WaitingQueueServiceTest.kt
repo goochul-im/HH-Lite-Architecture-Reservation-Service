@@ -1,15 +1,13 @@
 package kr.hhplus.be.server.application.wating.service
 
-import kr.hhplus.be.server.application.wating.port.WaitingQueuePort
+import kr.hhplus.be.server.application.wating.service.port.WaitingQueuePort
 import kr.hhplus.be.server.auth.UserStatus
 import kr.hhplus.be.server.common.jwt.JwtProvider
 import kr.hhplus.be.server.exception.WaitingQueueException
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.BDDMockito
 import org.mockito.BDDMockito.given
 import org.mockito.InjectMocks
 import org.mockito.Mock

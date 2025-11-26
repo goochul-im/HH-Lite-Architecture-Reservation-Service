@@ -1,8 +1,7 @@
-package kr.hhplus.be.server.application.wating.service
+package kr.hhplus.be.server.application.wating.infrastructure
 
-import kr.hhplus.be.server.application.wating.WaitingQueueConstant.ZSET_WAIT_KEY
-import kr.hhplus.be.server.application.wating.WaitingQueueConstant.ENTER_LIST_KEY
-import kr.hhplus.be.server.application.wating.port.WaitingQueuePort
+import kr.hhplus.be.server.application.wating.WaitingQueueConstant
+import kr.hhplus.be.server.application.wating.service.port.WaitingQueuePort
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.StringRedisTemplate
@@ -20,26 +19,26 @@ class WaitingQueueAdaptor(
 
     override fun add(userId: String) {
         val score = System.currentTimeMillis().toDouble()
-        val add = redisTemplate.opsForZSet().add(ZSET_WAIT_KEY, userId, score)
+        val add = redisTemplate.opsForZSet().add(WaitingQueueConstant.ZSET_WAIT_KEY, userId, score)
         log.info(" Redis wait:order: 에 $userId 추가 여부 : $add ")
     }
 
     override fun getMyRank(userId: String): Long? {
-        return redisTemplate.opsForZSet().rank(ZSET_WAIT_KEY, userId)
+        return redisTemplate.opsForZSet().rank(WaitingQueueConstant.ZSET_WAIT_KEY, userId)
     }
 
     override fun isEnteringKey(userId: String): Boolean {
-        val key = "$ENTER_LIST_KEY$userId"
+        val key = "${WaitingQueueConstant.ENTER_LIST_KEY}$userId"
         return redisTemplate.hasKey(key)
     }
 
     override fun deleteToken(userId: String) {
-        val key = "$ENTER_LIST_KEY$userId"
+        val key = "${WaitingQueueConstant.ENTER_LIST_KEY}$userId"
         redisTemplate.delete(key)
     }
 
     override fun renewalTokenTTL(userId: String) {
-        val key = "$ENTER_LIST_KEY$userId"
+        val key = "${WaitingQueueConstant.ENTER_LIST_KEY}$userId"
         if (redisTemplate.hasKey(key)) {
             redisTemplate.expire(key, enteringTime, TimeUnit.SECONDS)
         }
@@ -47,14 +46,14 @@ class WaitingQueueAdaptor(
 
     override fun enteringQueue() {
         val opsForZSet = redisTemplate.opsForZSet()
-        val top5 = opsForZSet.popMin(ZSET_WAIT_KEY, 5)
+        val top5 = opsForZSet.popMin(WaitingQueueConstant.ZSET_WAIT_KEY, 5)
 
         if (top5 == null || top5.isEmpty()) {
             return
         }
 
         for (userid in top5) {
-            val enterKey = "$ENTER_LIST_KEY${userid.value}"
+            val enterKey = "${WaitingQueueConstant.ENTER_LIST_KEY}${userid.value}"
             redisTemplate.opsForValue().set(enterKey, "1")
             redisTemplate.expire(enterKey, enteringTime, TimeUnit.SECONDS)
             log.info { "대기열에서 접속 리스트로 이동 : ${userid.value}" }

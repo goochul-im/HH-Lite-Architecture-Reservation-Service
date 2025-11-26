@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.wating.port
+package kr.hhplus.be.server.application.wating.service.port
 
 interface WaitingQueuePort {
 

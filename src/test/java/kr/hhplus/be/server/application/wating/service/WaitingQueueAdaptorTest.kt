@@ -2,6 +2,7 @@ package kr.hhplus.be.server.application.wating.service
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.wating.WaitingQueueConstant
+import kr.hhplus.be.server.application.wating.infrastructure.WaitingQueueAdaptor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
