@@ -1,13 +1,15 @@
 package kr.hhplus.be.server.member.infrastructure
 
 import kr.hhplus.be.server.exception.ResourceNotFoundException
+import kr.hhplus.be.server.member.domain.Member
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.BDDMockito.*
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
+import org.mockito.kotlin.given
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
@@ -89,6 +91,22 @@ class MemberRepositoryImplTest {
         assertThatThrownBy{ memberRepositoryImpl.findById(findId) }.isInstanceOf(
             ResourceNotFoundException::class.java
         )
+    }
+
+    @Test
+    fun `새로운 회원이 생성될 수 있다`(){
+        //given
+        val member = Member(username = "testUsername", password = "testPassword")
+        given(memberJpaRepository.countByUsername("testUsername")).willReturn(0)
+        given(memberJpaRepository.save(any<MemberEntity>())).willAnswer { it.arguments[0] }
+
+        //when
+        val result = memberRepositoryImpl.save(member)
+
+        //then
+        assertThat(result.username).isEqualTo("testUsername")
+        assertThat(result.password).isEqualTo("testPassword")
+        assertThat(result.point).isEqualTo(0)
     }
 
 }

@@ -93,3 +93,4 @@ data class ReservationMakeRequest(
     @Schema(description = "좌석 번호", example = "12")
     val seatNumber: Int
 )
+

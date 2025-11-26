@@ -5,7 +5,6 @@ import kr.hhplus.be.server.application.wating.WaitingQueueConstant
 import kr.hhplus.be.server.application.wating.infrastructure.WaitingQueueAdaptor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,7 +17,7 @@ import java.util.concurrent.TimeUnit
 @SpringBootTest
 @Import(TestcontainersConfiguration::class)
 @ActiveProfiles("test")
-class WaitingQueueAdaptorTest {
+class WaitingQueueAdaptorIntegrationTest {
 
     @Autowired
     private lateinit var waitingQueueAdaptor: WaitingQueueAdaptor

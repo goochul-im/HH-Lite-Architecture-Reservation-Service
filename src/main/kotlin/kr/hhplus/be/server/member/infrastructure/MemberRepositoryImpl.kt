@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.member.infrastructure
 
+import kr.hhplus.be.server.exception.DuplicateResourceException
 import kr.hhplus.be.server.exception.ResourceNotFoundException
 import kr.hhplus.be.server.member.domain.Member
 import kr.hhplus.be.server.member.port.MemberRepository
@@ -24,6 +25,11 @@ class MemberRepositoryImpl(
     }
 
     override fun save(member: Member): Member {
-        return memberJpaRepository.save(MemberEntity.from(member)).toDomain()
+        if (memberJpaRepository.countByUsername(member.username) > 0) {
+            throw DuplicateResourceException("Member username : ${member.username} is duplicate")
+        }
+
+        val entity = MemberEntity.from(member)
+        return memberJpaRepository.save(entity).toDomain()
     }
 }
