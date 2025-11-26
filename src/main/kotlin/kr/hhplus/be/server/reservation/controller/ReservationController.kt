@@ -1,10 +1,16 @@
 package kr.hhplus.be.server.reservation.controller
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
+import kr.hhplus.be.server.reservation.dto.AvailableSeatsResponse
+import kr.hhplus.be.server.reservation.dto.PayReservationResponse
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
+import kr.hhplus.be.server.reservation.dto.ReservationResponse
 import kr.hhplus.be.server.reservation.service.ReservationService
 import org.apache.catalina.User
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
@@ -16,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 
+@Tag(name = "예약", description = "콘서트 좌석 예약/조회/결제 관련 API")
 @RestController
 @RequestMapping("/api/reservation")
 class ReservationController(
@@ -23,11 +30,13 @@ class ReservationController(
 
 ) {
 
+    @Operation(summary = "콘서트 좌석 예약", description = "특정 날짜의 콘서트 좌석을 예약합니다.")
+    @ApiResponse(responseCode = "200", description = "예약 성공", content = [Content(schema = Schema(implementation = ReservationResponse::class))])
     @PostMapping
     fun make(
         @AuthenticationPrincipal user: User,
         @RequestBody req: ReservationMakeRequest
-    ): ResponseEntity<*> {
+    ): ResponseEntity<ReservationResponse> {
         reservationService.make(
             ReservationRequest(
                 req.date,
@@ -37,43 +46,50 @@ class ReservationController(
         )
 
         return ResponseEntity.ok(
-            mapOf(
-                "date" to req.date,
-                "seatNumber" to req.seatNumber
+            ReservationResponse(
+                date = req.date,
+                seatNumber = req.seatNumber
             )
         )
     }
 
+    @Operation(summary = "예약 가능 좌석 조회", description = "선택한 날짜에 예약 가능한 좌석 목록을 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = AvailableSeatsResponse::class))])
     @GetMapping("/date")
     fun getAvailableSeatNumbers(
         @RequestParam date: LocalDate
-    ): ResponseEntity<*> {
+    ): ResponseEntity<AvailableSeatsResponse> {
         val list = reservationService.getAvailableSeat(date)
         return ResponseEntity.ok(
-            mapOf(
-                "date" to date,
-                "seats" to list
+            AvailableSeatsResponse(
+                date = date,
+                seats = list
             )
         )
     }
 
+    @Operation(summary = "임시 예약 결제", description = "임시 배정된 예약건을 결제 처리합니다.")
+    @ApiResponse(responseCode = "200", description = "결제 성공", content = [Content(schema = Schema(implementation = PayReservationResponse::class))])
     @PostMapping("/pay/{id}")
     fun payTempReservation(
         @AuthenticationPrincipal user: User,
         @PathVariable("id") id: Long
-    ): ResponseEntity<*> {
+    ): ResponseEntity<PayReservationResponse> {
         val reservation = reservationService.payReservation(id, user.username)
         return ResponseEntity.ok(
-            mapOf(
-                "date" to reservation.date,
-                "seat" to reservation.seatNumber
+            PayReservationResponse(
+                date = reservation.date,
+                seat = reservation.seatNumber
             )
         )
     }
 
 }
 
+@Schema(description = "좌석 예약 요청")
 data class ReservationMakeRequest(
+    @Schema(description = "예약 날짜", example = "2025-11-26")
     val date: LocalDate,
+    @Schema(description = "좌석 번호", example = "12")
     val seatNumber: Int
 )
