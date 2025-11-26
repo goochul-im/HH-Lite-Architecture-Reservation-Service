@@ -3,8 +3,7 @@ package kr.hhplus.be.server.auth.security
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import kr.hhplus.be.server.application.wating.port.WaitingQueuePort
-import kr.hhplus.be.server.auth.UserStatus
+import kr.hhplus.be.server.application.wating.service.port.WaitingQueuePort
 import kr.hhplus.be.server.auth.exception.AccessDeniedException
 import kr.hhplus.be.server.common.jwt.JwtProvider
 import mu.KotlinLogging

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.common.exception
+package kr.hhplus.be.server.exception
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -8,12 +8,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 @ControllerAdvice
 class ExceptionAdvice {
 
-    @ExceptionHandler(SessionTokenNotFoundException::class)
-    fun exceptionHandler(e: SessionTokenNotFoundException): ResponseEntity<Map<String,String>> {
-
-
-
-        return errorResponse(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.")
+    @ExceptionHandler
+    fun exceptionhandler(e: ResourceNotFoundException): ResponseEntity<*> {
+        return errorResponse(HttpStatus.NOT_FOUND, e.message.toString())
     }
 
     private fun errorResponse(status : HttpStatus, message: String): ResponseEntity<Map<String, String>> = ResponseEntity
