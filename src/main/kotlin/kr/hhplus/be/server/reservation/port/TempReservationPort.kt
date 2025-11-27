@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.reservation.port
 
-import kr.hhplus.be.server.reservation.domain.Reservation
 import java.time.LocalDate
 
 interface TempReservationPort {

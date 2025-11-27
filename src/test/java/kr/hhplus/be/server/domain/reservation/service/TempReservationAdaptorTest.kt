@@ -1,28 +1,19 @@
 package kr.hhplus.be.server.domain.reservation.service
 
 import jakarta.persistence.EntityNotFoundException
-import kr.hhplus.be.server.member.Member
-import kr.hhplus.be.server.reservation.domain.Reservation
-import kr.hhplus.be.server.reservation.domain.ReservationRepository
-import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
+import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
+import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.service.TempReservationAdaptor
-import kr.hhplus.be.server.reservation.TempReservationConstant
-import kr.hhplus.be.server.reservation.service.RedisReservationOperationsImpl
 import kr.hhplus.be.server.reservation.service.port.RedisReservationOperations
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.*
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.data.redis.connection.RedisConnection
-import org.springframework.data.redis.core.*
-import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDate
 import java.util.*
 
@@ -33,7 +24,7 @@ class TempReservationAdaptorTest {
     private lateinit var redisOperations: RedisReservationOperations
 
     @Mock
-    private lateinit var reservationRepository: ReservationRepository
+    private lateinit var reservationJpaRepository: ReservationJpaRepository
 
     @InjectMocks
     private lateinit var adaptor: TempReservationAdaptor
@@ -131,7 +122,7 @@ class TempReservationAdaptorTest {
     @Test
     fun `cleanupExpiredReservation 성공`() {
         // Given
-        val reservation = Reservation(
+        val reservationEntity = ReservationEntity(
             id = reservationId,
             date = date,
             seatNumber = seatNumber,
@@ -139,10 +130,10 @@ class TempReservationAdaptorTest {
             reserver = null
         )
 
-        given(reservationRepository.findById(reservationId))
-            .willReturn(Optional.of(reservation))
-        given(reservationRepository.save(any()))
-            .willReturn(reservation)
+        given(reservationJpaRepository.findById(reservationId))
+            .willReturn(Optional.of(reservationEntity))
+        given(reservationJpaRepository.save(any()))
+            .willReturn(reservationEntity)
 
         // When
         adaptor.cleanupExpiredReservation(reservationId)
@@ -151,10 +142,10 @@ class TempReservationAdaptorTest {
         verify(redisOperations, times(1))
             .removeFromReserveSet("check:seat:$date", seatNumber)
 
-        verify(reservationRepository, times(1))
+        verify(reservationJpaRepository, times(1))
             .save(any())
 
-        assertThat(reservation.status)
+        assertThat(reservationEntity.status)
             .isNotNull
             .isEqualTo(ReservationStatus.CANCEL)
     }
@@ -162,7 +153,7 @@ class TempReservationAdaptorTest {
     @Test
     fun `cleanupExpiredReservation 예약이 없을 때 EntityNotFoundException 발생`() {
         // Given
-        given(reservationRepository.findById(reservationId))
+        given(reservationJpaRepository.findById(reservationId))
             .willReturn(Optional.empty())
 
         // When & Then
@@ -176,7 +167,7 @@ class TempReservationAdaptorTest {
     @Test
     fun `cleanupExpiredReservation 예약 없을 때 Redis 작업 미실행`() {
         // Given
-        given(reservationRepository.findById(reservationId))
+        given(reservationJpaRepository.findById(reservationId))
             .willReturn(Optional.empty())
 
         // When & Then

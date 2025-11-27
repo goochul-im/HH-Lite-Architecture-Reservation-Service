@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.common
 
-import kr.hhplus.be.server.member.Member
-import kr.hhplus.be.server.member.MemberRepository
+import kr.hhplus.be.server.member.infrastructure.MemberEntity
+import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component
 
 @Component
 class DataInitializer(
-    private val memberRepository: MemberRepository,
+    private val memberJpaRepository: MemberJpaRepository,
     private val passwordEncoder: PasswordEncoder
 ) : ApplicationListener<ContextRefreshedEvent> {
 
     override fun onApplicationEvent(event: ContextRefreshedEvent) {
 
-        if (memberRepository.count() <= 0) {
-            memberRepository.save(Member(
+        if (memberJpaRepository.count() <= 0) {
+            memberJpaRepository.save(MemberEntity(
                 username = "gooch123",
                 password = passwordEncoder.encode("goo6485")
             ))

@@ -3,10 +3,10 @@ package kr.hhplus.be.server.auth.security
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import kr.hhplus.be.server.application.wating.port.WaitingQueuePort
-import kr.hhplus.be.server.auth.UserStatus
+import kr.hhplus.be.server.application.wating.service.port.WaitingQueuePort
 import kr.hhplus.be.server.auth.exception.AccessDeniedException
 import kr.hhplus.be.server.common.jwt.JwtProvider
+import kr.hhplus.be.server.auth.security.SecurityConstant
 import mu.KotlinLogging
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -29,18 +29,11 @@ class JwtAuthenticationFilter(
         private const val ACCESS_TOKEN_HEADER = "Authorization"
         private const val WAITING_TOKEN_HEADER = "X-Waiting-Token"
         private const val TOKEN_PREFIX = "Bearer "
-        private val EXCLUDED_PATHS = listOf(
-            "/api/auth/**",
-        )
-        private val NO_WAITING_TOKEN_PATH = listOf(
-            "/api/pay/**",
-            "/api/wait/enter"
-        )
     }
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.servletPath
-        return EXCLUDED_PATHS.any { matcher.match(it, path) }
+        return SecurityConstant.PUBLIC_URIS.any { matcher.match(it, path) }
     }
 
     override fun doFilterInternal(
@@ -60,7 +53,7 @@ class JwtAuthenticationFilter(
             setAuthentication(accessToken) // 인증 정보 설정
 
             // 2. Waiting Token 검증
-            val requiresActiveWaitingToken = !NO_WAITING_TOKEN_PATH.any{ matcher.match(it, path) }
+            val requiresActiveWaitingToken = !SecurityConstant.NO_WAITING_TOKEN_PATH.any{ matcher.match(it, path) }
 
             if (requiresActiveWaitingToken) {
                 //현재 접속 리스트에 존재하는지

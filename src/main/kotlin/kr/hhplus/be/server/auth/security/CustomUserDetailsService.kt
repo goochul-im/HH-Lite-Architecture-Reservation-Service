@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.auth.security
 
-import kr.hhplus.be.server.member.Member
-import kr.hhplus.be.server.member.MemberRepository
+import kr.hhplus.be.server.member.infrastructure.MemberEntity
+import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -10,25 +10,25 @@ import org.springframework.stereotype.Service
 
 @Service
 class CustomUserDetailsService(
-    private val memberRepository: MemberRepository
+    private val memberJpaRepository: MemberJpaRepository
 ) : UserDetailsService {
     override fun loadUserByUsername(username: String): UserDetails {
-        val member = memberRepository.findByUsername(username)
+        val member = memberJpaRepository.findByUsername(username)
             ?: throw UsernameNotFoundException("User not found with username: $username")
         return buildUserDetails(member)
     }
 
     fun loadUserById(id: String): UserDetails {
-        val member = memberRepository.findById(id).orElseThrow {
+        val member = memberJpaRepository.findById(id).orElseThrow {
             UsernameNotFoundException("User not found with id: $id")
         }
         return buildUserDetails(member)
     }
 
-    private fun buildUserDetails(member: Member): UserDetails {
+    private fun buildUserDetails(memberEntity: MemberEntity): UserDetails {
         return User.builder()
-            .username(member.id) // Spring Security's username is the unique ID
-            .password(member.password)
+            .username(memberEntity.id) // Spring Security's username is the unique ID
+            .password(memberEntity.password)
             .authorities(emptyList()) // No specific roles for now
             .build()
     }

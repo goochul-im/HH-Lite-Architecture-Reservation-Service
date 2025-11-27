@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.auth.security
 
+import kr.hhplus.be.server.auth.security.SecurityConstant
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -38,8 +39,10 @@ class SecurityConfig(
             .httpBasic { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
-                it.requestMatchers("/api/auth/**").permitAll()
-                  .anyRequest().authenticated()
+                it.requestMatchers(
+                    *SecurityConstant.PUBLIC_URIS
+                ).permitAll()
+                    .anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
             .exceptionHandling {

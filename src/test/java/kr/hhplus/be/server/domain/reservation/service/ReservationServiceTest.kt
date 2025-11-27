@@ -1,22 +1,22 @@
 package kr.hhplus.be.server.domain.reservation.service
 
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
-import kr.hhplus.be.server.auth.AuthService
-import kr.hhplus.be.server.member.Member
-import kr.hhplus.be.server.reservation.domain.Reservation
-import kr.hhplus.be.server.reservation.domain.ReservationRepository
-import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.member.infrastructure.MemberEntity
+import kr.hhplus.be.server.member.port.MemberRepository
+import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
+import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
+import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import kr.hhplus.be.server.reservation.service.ReservationService
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.any
-import org.mockito.BDDMockito.*
+//import org.mockito.ArgumentMatchers.any
+import org.mockito.kotlin.*
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.LocalDate
@@ -31,7 +31,7 @@ class ReservationServiceTest {
     private lateinit var tempReservationService: TempReservationPort
 
     @Mock
-    private lateinit var authService: AuthService
+    lateinit var memberRepository: MemberRepository
 
     private lateinit var reservationService: ReservationService
 
@@ -40,7 +40,7 @@ class ReservationServiceTest {
         reservationService = ReservationService(
             reservationRepository,
             tempReservationService,
-            authService,
+            memberRepository,
             1000
         )
     }
@@ -54,32 +54,33 @@ class ReservationServiceTest {
         val seatNumber = 5
         val request = ReservationRequest(date, memberId, seatNumber)
 
-        val member = Member(id = memberId, username = "Test User", password = "testpassword")
-        val reservation = Reservation(
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword")
+        val member = memberEntity.toDomain()
+        val reservationEntity = ReservationEntity(
             id = 1L,
             date = date,
             seatNumber = seatNumber,
             status = ReservationStatus.PENDING,
-            reserver = member
+            reserver = memberEntity
         )
+        val reservation = reservationEntity.toDomain()
 
-        given(authService.getById(memberId)).willReturn(member)
+        given(memberRepository.findById(memberId)).willReturn(member)
         given(reservationRepository.save(any())).willReturn(reservation)
 
         // When
         reservationService.make(request)
 
         // Then
-        verify(authService).getById(memberId)
         verify(reservationRepository).save(any())
-        verify(tempReservationService).save(date, reservation.id!!, seatNumber)
+        verify(tempReservationService).save(date, reservationEntity.id!!, seatNumber)
     }
 
     @Test
     fun `선택한 날짜의 예약 가능한 자리를 가져올 수 있다`() {
         //given
         val date = LocalDate.now()
-        given(reservationRepository.getReservedSeatnumber(date)).willReturn(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
+        given(reservationRepository.getReservedSeatNumber(date)).willReturn(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
         given(tempReservationService.getTempReservation(date)).willReturn(
             listOf(
                 41,
@@ -108,18 +109,22 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
-        val member = Member(id = memberId, username = "Test User", password = "testpassword", point = 10000)
-        val reservation = Reservation(
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 10000)
+        val member = memberEntity.toDomain()
+        val reservationEntity = ReservationEntity(
             reservationId,
             LocalDate.of(2025, 11, 18),
             10,
             ReservationStatus.PENDING,
-            member
+            memberEntity
         )
+        val reservation = reservationEntity.toDomain()
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
-        given(authService.getById(memberId)).willReturn(member)
-        given(reservationRepository.findReservationByIdAndReserver(reservationId, member)).willReturn(reservation)
+        given(memberRepository.findById(memberId)).willReturn(member)
+        given(reservationRepository.findReservationByIdAndReserver(reservationId, member.id!!)).willReturn(reservation)
+        given(reservationRepository.save(any())).willAnswer { it.arguments[0] }
+        given(memberRepository.save(any())).willAnswer { it.arguments[0] }
 
         //when
         val result = reservationService.payReservation(reservationId, memberId)
@@ -142,18 +147,20 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
-        val member = Member(id = memberId, username = "Test User", password = "testpassword", point = 500)
-        val reservation = Reservation(
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 500)
+        val member = memberEntity.toDomain()
+        val reservationEntity = ReservationEntity(
             reservationId,
             LocalDate.of(2025, 11, 18),
             10,
             ReservationStatus.PENDING,
-            member
+            memberEntity
         )
+        val reservation = reservationEntity.toDomain()
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
-        given(authService.getById(memberId)).willReturn(member)
-        given(reservationRepository.findReservationByIdAndReserver(reservationId, member)).willReturn(reservation)
+        given(memberRepository.findById(memberId)).willReturn(member)
+        given(reservationRepository.findReservationByIdAndReserver(reservationId, member.id!!)).willReturn(reservation)
 
         //when & then
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
@@ -182,10 +189,11 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
-        val member = Member(id = memberId, username = "Test User", password = "testpassword", point = 10000)
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 10000)
+        val member = memberEntity.toDomain()
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
-        given(authService.getById(memberId)).willReturn(member)
+        given(memberRepository.findById(memberId)).willReturn(member)
 
         //when & then
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
@@ -199,11 +207,12 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
-        val member = Member(id = memberId, username = "Test User", password = "testpassword", point = 10000)
+        val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 10000)
+        val member = memberEntity.toDomain()
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
-        given(authService.getById(memberId)).willReturn(member)
-        given(reservationRepository.findReservationByIdAndReserver(reservationId, member)).willReturn(null)
+        given(memberRepository.findById(memberId)).willReturn(member)
+        given(reservationRepository.findReservationByIdAndReserver(reservationId, member.id!!)).willReturn(null)
 
         //when & then
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
