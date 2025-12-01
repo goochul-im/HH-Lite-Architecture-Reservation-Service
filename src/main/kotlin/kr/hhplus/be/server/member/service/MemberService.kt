@@ -16,7 +16,7 @@ class MemberService(
             username = username,
             password = passwordEncoder.encode(password)
         )
-        memberRepository.save(member)
+        memberRepository.signUp(member)
     }
 
 }
