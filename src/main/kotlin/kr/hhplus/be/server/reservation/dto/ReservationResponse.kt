@@ -5,6 +5,8 @@ import java.time.LocalDate
 
 @Schema(description = "좌석 예약 응답")
 data class ReservationResponse(
+    @Schema(description = "예약 id", example = "1")
+    val id : Long,
     @Schema(description = "예약 날짜", example = "2025-11-26")
     val date: LocalDate,
     @Schema(description = "좌석 번호", example = "12")
@@ -24,5 +26,5 @@ data class PayReservationResponse(
     @Schema(description = "예약 날짜", example = "2025-11-26")
     val date: LocalDate,
     @Schema(description = "좌석 번호", example = "12")
-    val seat: Int
+    val seatNumber: Int
 )
