@@ -22,7 +22,7 @@ class ReservationService(
     private val price: Int,
 ) {
 
-    fun make(dto: ReservationRequest) {
+    fun make(dto: ReservationRequest) : Reservation {
 
         if (!getAvailableSeat(dto.date).contains(dto.seatNumber)) {
             throw RuntimeException("이미 예약되어있는 좌석입니다.")
@@ -35,8 +35,9 @@ class ReservationService(
             reserver = memberRepository.findById(dto.memberId)
         )
 
-        val save = ReservationEntity.from(reservationRepository.save(reservation))
+        val save : Reservation = reservationRepository.save(reservation)
         tempReservationService.save(dto.date, save.id!!, reservation.seatNumber)
+        return save
     }
 
     fun getAvailableSeat(date: LocalDate): List<Int> {
