@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.domain.reservation
+package kr.hhplus.be.server.integration
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.reservation.dto.ReservationRequest

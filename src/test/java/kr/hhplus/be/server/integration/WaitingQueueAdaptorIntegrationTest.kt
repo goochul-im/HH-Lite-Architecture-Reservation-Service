@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.wating.service
+package kr.hhplus.be.server.integration
 
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.wating.WaitingQueueConstant
@@ -104,34 +104,30 @@ class WaitingQueueAdaptorIntegrationTest {
         // then
         assertThat(ttlBefore).isNotNull()
         assertThat(ttlAfter).isNotNull()
-        // The new TTL is set by `enteringTime` value from properties, which is likely larger than the initial 10s
         assertThat(ttlAfter).isGreaterThan(ttlBefore!!)
     }
 
-//    @Test
-//    @DisplayName("입장 처리 로직 테스트")
-//    fun `enteringQueue should move top users to entering state`() {
-//        // given
-//        (1..10).forEach {
-//            waitingQueueAdaptor.add("user$it")
-//            Thread.sleep(10)
-//        }
-//
-//        // when
-//        waitingQueueAdaptor.enteringQueue()
-//
-//        // then
-//        val top5 = redisTemplate.opsForZSet().range(WaitingQueueConstant.ZSET_WAIT_KEY, 0, 4)
-//        assertThat(top5).hasSize(5)
-//
-//        top5?.forEach { userId ->
-//            val isEntering = waitingQueueAdaptor.isEnteringKey(userId)
-//            assertThat(isEntering).isTrue()
-//        }
-//
-//        // Check users not in top 5
-//        val notTopUser = "user6"
-//        val isNotTopUserEntering = waitingQueueAdaptor.isEnteringKey(notTopUser)
-//        assertThat(isNotTopUserEntering).isFalse()
-//    }
+    @Test
+    @DisplayName("입장 처리 로직 테스트")
+    fun `enteringQueue should move top users to entering state`() {
+        // given
+        (1..5).forEach {
+            waitingQueueAdaptor.add("user$it")
+            Thread.sleep(10)
+        }
+
+        // when
+        waitingQueueAdaptor.enteringQueue()
+
+        // then
+        (1..5).forEach {
+            val isEntering = waitingQueueAdaptor.isEnteringKey("user$it")
+            assertThat(isEntering).isTrue()
+        }
+
+        // Check users not in top 5
+        val notTopUser = "user6"
+        val isNotTopUserEntering = waitingQueueAdaptor.isEnteringKey(notTopUser)
+        assertThat(isNotTopUserEntering).isFalse()
+    }
 }
