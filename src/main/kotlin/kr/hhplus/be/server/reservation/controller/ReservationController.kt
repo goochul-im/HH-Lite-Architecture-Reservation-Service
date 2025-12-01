@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import kr.hhplus.be.server.reservation.domain.Reservation
 import kr.hhplus.be.server.reservation.dto.AvailableSeatsResponse
 import kr.hhplus.be.server.reservation.dto.PayReservationResponse
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
@@ -38,7 +39,7 @@ class ReservationController(
         @AuthenticationPrincipal user: User,
         @RequestBody req: ReservationMakeRequest
     ): ResponseEntity<ReservationResponse> {
-        reservationService.make(
+        val reservation : Reservation = reservationService.make(
             ReservationRequest(
                 req.date,
                 user.username,
@@ -48,8 +49,9 @@ class ReservationController(
 
         return ResponseEntity.ok(
             ReservationResponse(
-                date = req.date,
-                seatNumber = req.seatNumber
+                id = reservation.id!!,
+                date = reservation.date,
+                seatNumber = reservation.seatNumber
             )
         )
     }
@@ -80,7 +82,7 @@ class ReservationController(
         return ResponseEntity.ok(
             PayReservationResponse(
                 date = reservation.date,
-                seat = reservation.seatNumber
+                seatNumber = reservation.seatNumber
             )
         )
     }
