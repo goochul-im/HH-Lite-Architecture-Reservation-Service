@@ -10,9 +10,10 @@ import kr.hhplus.be.server.reservation.dto.PayReservationResponse
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.dto.ReservationResponse
 import kr.hhplus.be.server.reservation.service.ReservationService
-import org.apache.catalina.User
+//import org.apache.catalina.User
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.userdetails.User
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
