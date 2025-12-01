@@ -101,7 +101,7 @@ class MemberRepositoryImplTest {
         given(memberJpaRepository.save(any<MemberEntity>())).willAnswer { it.arguments[0] }
 
         //when
-        val result = memberRepositoryImpl.save(member)
+        val result = memberRepositoryImpl.signUp(member)
 
         //then
         assertThat(result.username).isEqualTo("testUsername")
