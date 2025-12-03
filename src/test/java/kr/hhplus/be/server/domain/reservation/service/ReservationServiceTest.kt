@@ -3,6 +3,12 @@ package kr.hhplus.be.server.domain.reservation.service
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.member.port.MemberRepository
+import kr.hhplus.be.server.outbox.domain.AggregateType
+import kr.hhplus.be.server.outbox.domain.EventType
+import kr.hhplus.be.server.outbox.domain.OutboxMessage
+import kr.hhplus.be.server.outbox.domain.OutboxStatus
+import kr.hhplus.be.server.outbox.port.OutboxRepository
+import kr.hhplus.be.server.reservation.dto.TempReservationPayload
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
@@ -33,6 +39,9 @@ class ReservationServiceTest {
     @Mock
     lateinit var memberRepository: MemberRepository
 
+    @Mock
+    lateinit var outboxRepository: OutboxRepository
+
     private lateinit var reservationService: ReservationService
 
     @BeforeEach
@@ -41,7 +50,8 @@ class ReservationServiceTest {
             reservationRepository,
             tempReservationService,
             memberRepository,
-            1000
+            1000,
+            outboxRepository
         )
     }
 
@@ -69,11 +79,22 @@ class ReservationServiceTest {
         given(reservationRepository.save(any())).willReturn(reservation)
 
         // When
-        reservationService.make(request)
+        val result = reservationService.make(request)
 
         // Then
-        verify(reservationRepository).save(any())
-        verify(tempReservationService).save(date, reservationEntity.id!!, seatNumber)
+
+        assertThat(result.id).isEqualTo(1L)
+        assertThat(result.date).isEqualTo(date)
+        assertThat(result.seatNumber).isEqualTo(5)
+        assertThat(result.status).isEqualTo(ReservationStatus.PENDING)
+        assertThat(result.reserver).isNotNull
+        assertThat(result.reserver!!.id).isEqualTo("testmember")
+        assertThat(result.reserver!!.point).isEqualTo(0)
+        assertThat(result.reserver!!.username).isEqualTo("Test User")
+        assertThat(result.reserver!!.password).isEqualTo("testpassword")
+
+        verify(reservationRepository, times(1)).save(any())
+        verify(outboxRepository, times(1)).save(any())
     }
 
     @Test
