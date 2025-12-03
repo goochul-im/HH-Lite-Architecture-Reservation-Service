@@ -15,6 +15,7 @@ import kr.hhplus.be.server.outbox.domain.EventType
 import kr.hhplus.be.server.outbox.domain.OutboxMessage
 import kr.hhplus.be.server.outbox.domain.OutboxStatus
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "outbox")
@@ -35,7 +36,10 @@ class OutboxEntity(
 
     @Column(nullable = false, name = "status")
     @Enumerated(EnumType.STRING)
-    val status: OutboxStatus
+    val status: OutboxStatus,
+
+    @Column(nullable = true, name = "processed_at")
+    val processedAt: LocalDateTime? = null
 
 ) : BaseEntity() {
 
@@ -45,7 +49,8 @@ class OutboxEntity(
             this.aggregateType,
             this.eventType,
             SerializeUtil.outboxStringToMap(this.payload),
-            this.status
+            this.status,
+            this.processedAt
         )
     }
 
@@ -56,7 +61,8 @@ class OutboxEntity(
                 domain.aggregateType,
                 domain.eventType,
                 SerializeUtil.outboxMapToString(domain.payload),
-                domain.status
+                domain.status,
+                domain.processedAt
             )
         }
     }
