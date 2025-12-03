@@ -135,7 +135,7 @@ class ApplicationIntegrationTest {
         waitingQueueService.enterQueue() // 즉시 대기열에서 접속상태로 변경
 
         val reservation = mockMvc.perform(
-            post("/api/reservation")
+            post("/api/reservation") // 예약 생성
                 .header("Authorization", "Bearer $accessToken")
                 .header("X-Waiting-Token", "Bearer $waitingToken")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -154,7 +154,7 @@ class ApplicationIntegrationTest {
         val reservationId = reservationResponse.id
 
         mockMvc.perform(
-            post("/api/reservation/pay/$reservationId")
+            post("/api/reservation/pay/$reservationId") // 임시 예약 결제
                 .header("Authorization", "Bearer $accessToken")
                 .header("X-Waiting-Token", "Bearer $waitingToken")
                 .contentType(MediaType.APPLICATION_JSON)
