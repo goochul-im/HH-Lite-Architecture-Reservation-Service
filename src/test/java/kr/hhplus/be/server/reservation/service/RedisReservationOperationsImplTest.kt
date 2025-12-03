@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.reservation.service
 
 import kr.hhplus.be.server.TestcontainersConfiguration
-import kr.hhplus.be.server.reservation.service.port.RedisReservationOperations
+import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

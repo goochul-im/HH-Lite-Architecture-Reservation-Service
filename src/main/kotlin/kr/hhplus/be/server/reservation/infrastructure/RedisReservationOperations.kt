@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.reservation.service.port
+package kr.hhplus.be.server.reservation.infrastructure
 
 interface RedisReservationOperations {
 

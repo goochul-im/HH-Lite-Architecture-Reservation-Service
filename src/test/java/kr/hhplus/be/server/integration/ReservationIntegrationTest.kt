@@ -7,7 +7,7 @@ import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.service.ReservationService
-import kr.hhplus.be.server.reservation.TempReservationConstant
+import kr.hhplus.be.server.reservation.infrastructure.TempReservationConstant
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.BeforeEach

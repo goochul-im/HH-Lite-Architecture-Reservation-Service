@@ -4,8 +4,8 @@ import jakarta.persistence.EntityNotFoundException
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
-import kr.hhplus.be.server.reservation.service.TempReservationAdaptor
-import kr.hhplus.be.server.reservation.service.port.RedisReservationOperations
+import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
+import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
