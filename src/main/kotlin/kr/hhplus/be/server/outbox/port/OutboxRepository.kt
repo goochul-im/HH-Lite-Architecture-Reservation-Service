@@ -6,4 +6,6 @@ interface OutboxRepository {
 
     fun save(outboxMessage: OutboxMessage) : OutboxMessage
 
+    fun getPendingList() : List<OutboxMessage>
+
 }

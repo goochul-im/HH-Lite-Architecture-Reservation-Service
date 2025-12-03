@@ -14,4 +14,7 @@ class OutboxRepositoryImpl(
         return repo.save(entity).toDomain()
     }
 
+    override fun getPendingList(): List<OutboxMessage> {
+        return repo.getPendingList().map { it.toDomain() }
+    }
 }
