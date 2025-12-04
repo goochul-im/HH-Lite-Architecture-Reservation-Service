@@ -30,6 +30,12 @@ class ExceptionAdvice {
         return errorResponse(HttpStatus.NOT_FOUND, e.message.toString())
     }
 
+    @ExceptionHandler
+    fun exceptionhandler(e: DuplicateResourceException): ResponseEntity<*> {
+        log.error { "예외 발생 ${e.message}" }
+        return errorResponse(HttpStatus.CONFLICT, e.message.toString())
+    }
+
     private fun errorResponse(status : HttpStatus, message: String): ResponseEntity<Map<String, String>> = ResponseEntity
         .status(status)
         .body(

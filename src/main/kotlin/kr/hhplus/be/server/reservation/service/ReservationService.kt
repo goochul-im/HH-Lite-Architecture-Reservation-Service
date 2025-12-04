@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.reservation.service
 
 import jakarta.transaction.Transactional
+import kr.hhplus.be.server.exception.DuplicateResourceException
 import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.member.port.MemberRepository
 import kr.hhplus.be.server.outbox.domain.AggregateType
@@ -33,7 +34,7 @@ class ReservationService(
     fun make(dto: ReservationRequest) : Reservation {
 
         if (!getAvailableSeat(dto.date).contains(dto.seatNumber)) {
-            throw RuntimeException("이미 예약되어있는 좌석입니다.")
+            throw DuplicateResourceException("이미 예약되어있는 좌석입니다.")
         }
 
         val reservation = Reservation(
