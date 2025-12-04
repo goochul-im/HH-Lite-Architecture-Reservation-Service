@@ -14,14 +14,19 @@ import kr.hhplus.be.server.member.domain.Member
 import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
 import kr.hhplus.be.server.member.port.MemberRepository
 import kr.hhplus.be.server.member.service.MemberService
+import kr.hhplus.be.server.outbox.scheduler.OutboxScheduler
 import kr.hhplus.be.server.reservation.controller.ReservationMakeRequest
 import kr.hhplus.be.server.reservation.dto.ReservationResponse
+import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
 import kr.hhplus.be.server.reservation.port.ReservationRepository
+import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.*
 import org.junit.Before
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,7 +67,16 @@ class ApplicationIntegrationTest {
     lateinit var reservationRepository: ReservationJpaRepository
 
     @Autowired
+    lateinit var tempReservationAdaptor: TempReservationPort
+
+    @Autowired
     lateinit var memberRepository: MemberJpaRepository
+
+    @Autowired
+    lateinit var redisOperation: RedisReservationOperations
+
+    @Autowired
+    lateinit var outboxScheduler: OutboxScheduler
 
     lateinit var accessToken: String
     lateinit var waitingToken: String
@@ -99,22 +113,19 @@ class ApplicationIntegrationTest {
         val enterContent = enterResult.response.contentAsString
         val enterResponse = objectMapper.readValue(enterContent, TokenResponse::class.java)
         waitingToken = enterResponse.waitingToken.toString()
+
+        waitingQueueService.enterQueue() // 즉시 대기열에서 접속상태로 변경
+    }
+
+    @AfterEach
+    fun cleanUpRedis() {
+        redisOperation.cleanUp()
     }
 
     @Test
     fun `좌석 예약을 요청하고 충전 후 결제를 완료하면 예약이 완료된다`() {
 
-        val chargeReq = UsePointReq(
-            10000
-        )
-
-        mockMvc.perform(
-            post("/api/point/charge")
-                .header("Authorization", "Bearer $accessToken")
-//                .header("X-Waiting-Token", "Bearer $waitingToken")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(chargeReq))
-        )
+        chargePoint(accessToken)
 
         val pointResult = mockMvc.perform(
             get("/api/point")
@@ -132,46 +143,128 @@ class ApplicationIntegrationTest {
             10
         )
 
-        waitingQueueService.enterQueue() // 즉시 대기열에서 접속상태로 변경
+        val reservationResponse =
+            makeReservation(request, accessToken, waitingToken) // 예약 생성
 
+        validateReservationInRepo(
+            reservationResponse.id,
+            LocalDate.of(2025, 12, 1),
+            10,
+            ReservationStatus.PENDING
+        )
+
+        // 임시 예약 결제
+        payReservation(reservationResponse.id, accessToken, waitingToken)
+
+        validateReservationInRepo(
+            reservationResponse.id,
+            LocalDate.of(2025, 12, 1),
+            10,
+            ReservationStatus.RESERVE
+        )
+
+    }
+
+    @Test
+    fun `임시 예약 후 만료 시간이 지나면 다시 예약이 가능하다`() {
+        //given
+        chargePoint(accessToken)
+        val request = ReservationMakeRequest(
+            LocalDate.of(2025, 12, 1),
+            10
+        )
+        val reservationResponse = makeReservation(request, accessToken, waitingToken) // 예약
+
+        validateReservationInRepo(
+            reservationResponse.id,
+            LocalDate.of(2025, 12, 1),
+            10,
+            ReservationStatus.PENDING
+        )
+
+        tempReservationAdaptor.cleanupExpiredReservation(reservationResponse.id) // 예약 만료 작동
+
+        validateReservationInRepo(
+            reservationResponse.id,
+            LocalDate.of(2025, 12, 1),
+            10,
+            ReservationStatus.CANCEL
+        )
+
+        //when
+
+        val retryReservationResponse = makeReservation(request, accessToken, waitingToken) // 예약 다시 생성
+        validateReservationInRepo(
+            retryReservationResponse.id,
+            LocalDate.of(2025, 12, 1),
+            10,
+            ReservationStatus.PENDING
+        )
+
+        payReservation(retryReservationResponse.id, accessToken, waitingToken)
+
+        //then
+        validateReservationInRepo(
+            retryReservationResponse.id,
+            LocalDate.of(2025, 12, 1),
+            10,
+            ReservationStatus.RESERVE
+        )
+    }
+
+    private fun payReservation(reservationId : Long, access: String, waiting: String) {
+        val reservation = reservationRepository.findById(reservationId).get()
+
+        mockMvc.perform(
+            post("/api/reservation/pay/$reservationId") // 임시 예약 결제
+                .header("Authorization", "Bearer $access")
+                .header("X-Waiting-Token", "Bearer $waiting")
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk)
+            .andExpect(jsonPath("$.date").value(reservation.date.toString()))
+            .andExpect(jsonPath("$.seatNumber").value(reservation.seatNumber.toString()))
+    }
+
+    private fun makeReservation(request: ReservationMakeRequest, access: String, waiting: String): ReservationResponse {
         val reservation = mockMvc.perform(
             post("/api/reservation") // 예약 생성
-                .header("Authorization", "Bearer $accessToken")
-                .header("X-Waiting-Token", "Bearer $waitingToken")
+                .header("Authorization", "Bearer $access")
+                .header("X-Waiting-Token", "Bearer $waiting")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.date").value("2025-12-01"))
-            .andExpect(jsonPath("$.seatNumber").value("10"))
+            .andExpect(jsonPath("$.date").value(request.date.toString()))
+            .andExpect(jsonPath("$.seatNumber").value(request.seatNumber.toString()))
             .andReturn()
+
+        outboxScheduler.schedule() // 강제 스케줄링 실행
 
         val reservationResponse =
             objectMapper.readValue(reservation.response.contentAsString, ReservationResponse::class.java)
 
-        validateReservationInRepo(ReservationStatus.PENDING)
-
-        // 임시 예약 결제
-        val reservationId = reservationResponse.id
-
-        mockMvc.perform(
-            post("/api/reservation/pay/$reservationId") // 임시 예약 결제
-                .header("Authorization", "Bearer $accessToken")
-                .header("X-Waiting-Token", "Bearer $waitingToken")
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk)
-            .andExpect(jsonPath("$.date").value("2025-12-01"))
-            .andExpect(jsonPath("$.seatNumber").value("10"))
-
-        validateReservationInRepo(ReservationStatus.RESERVE)
+        return reservationResponse
     }
 
-    private fun validateReservationInRepo(status: ReservationStatus) {
-        val reservationInRepo = reservationRepository.findById(1L)
+    private fun validateReservationInRepo(id: Long, date: LocalDate, seatNumber: Int, status: ReservationStatus) {
+        val reservationInRepo = reservationRepository.findById(id)
         assertThat(reservationInRepo).isNotEmpty
-        assertThat(reservationInRepo.get().id).isEqualTo(1L)
-        assertThat(reservationInRepo.get().date).isEqualTo(LocalDate.of(2025, 12, 1))
+        assertThat(reservationInRepo.get().id).isEqualTo(id)
+        assertThat(reservationInRepo.get().date).isEqualTo(date)
         assertThat(reservationInRepo.get().status).isEqualTo(status)
-        assertThat(reservationInRepo.get().seatNumber).isEqualTo(10)
+        assertThat(reservationInRepo.get().seatNumber).isEqualTo(seatNumber)
+    }
+
+    private fun chargePoint(token: String) {
+        val chargeReq = UsePointReq(
+            10000
+        )
+
+        mockMvc.perform(
+            post("/api/point/charge")
+                .header("Authorization", "Bearer $token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(chargeReq))
+        )
     }
 
 
