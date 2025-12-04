@@ -53,4 +53,8 @@ class RedisReservationOperationsImpl(
     override fun removeFromReserveSet(reserveKey: String, seatNumber: Int) {
         redisTemplate.opsForSet().remove(reserveKey, seatNumber.toString())
     }
+
+    override fun cleanUp() {
+        redisTemplate.connectionFactory?.connection?.serverCommands()?.flushDb()
+    }
 }
