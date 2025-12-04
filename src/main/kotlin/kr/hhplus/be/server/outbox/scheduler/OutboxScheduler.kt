@@ -7,6 +7,7 @@ import kr.hhplus.be.server.outbox.port.OutboxRepository
 import mu.KotlinLogging
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class OutboxScheduler(
@@ -16,6 +17,7 @@ class OutboxScheduler(
 
     private val log = KotlinLogging.logger { }
 
+    @Transactional
     @Scheduled(fixedRate = 1000)
     fun schedule() {
         val pendingList = outboxRepository.getPendingList()

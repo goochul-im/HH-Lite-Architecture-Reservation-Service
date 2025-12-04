@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @Component
 class TempReservationOutboxHandlerImpl(
@@ -40,9 +41,12 @@ class TempReservationOutboxHandlerImpl(
     override fun handle(message: OutboxMessage): OutboxMessage {
         val payload = message.payload
         try {
+            val dateString = payload["date"] as String
+            val localDate = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
+
             tempReservationService.save(
-                payload["date"] as LocalDate,
-                payload["id"] as Long,
+                localDate,
+                (payload["id"] as Number).toLong(),
                 payload["seatNumber"] as Int)
         } catch (e: Exception) {
             log.error { "Redis 처리 중 예외가 발생하였습니다." }
