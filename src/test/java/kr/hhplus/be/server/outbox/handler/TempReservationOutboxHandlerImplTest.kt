@@ -11,6 +11,7 @@ import kr.hhplus.be.server.outbox.port.OutboxRepository
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.*
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -44,7 +45,7 @@ class TempReservationOutboxHandlerImplTest {
             AggregateType.TEMP_RESERVATION,
             EventType.INSERT,
             mapOf(
-                "date" to LocalDate.of(2025, 12, 3),
+                "date" to "2025-12-03",
                 "id" to 1L,
                 "seatNumber" to 10),
             OutboxStatus.PENDING
@@ -55,7 +56,7 @@ class TempReservationOutboxHandlerImplTest {
                 AggregateType.TEMP_RESERVATION,
                 EventType.INSERT,
                 mapOf(
-                    "date" to LocalDate.of(2025, 12, 3),
+                    "date" to "2025-12-03",
                     "id" to 1L,
                     "seatNumber" to 10),
                 OutboxStatus.DONE
@@ -70,7 +71,7 @@ class TempReservationOutboxHandlerImplTest {
         assertThat(result.aggregateType).isEqualTo(AggregateType.TEMP_RESERVATION)
         assertThat(result.eventType).isEqualTo(EventType.INSERT)
         assertThat(result.payload)
-            .containsEntry("date", LocalDate.of(2025, 12, 3))
+            .containsEntry("date", LocalDate.of(2025, 12, 3).toString())
             .containsEntry("id", 1L)
             .containsEntry("seatNumber", 10)
         assertThat(result.status).isEqualTo(OutboxStatus.DONE)
@@ -85,7 +86,7 @@ class TempReservationOutboxHandlerImplTest {
             AggregateType.TEMP_RESERVATION,
             EventType.INSERT,
             mapOf(
-                "date" to LocalDate.of(2025, 12, 3),
+                "date" to LocalDate.of(2025, 12, 3).toString(),
                 "id" to 1L,
                 "seatNumber" to 10
             ),

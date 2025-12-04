@@ -7,10 +7,13 @@ import kr.hhplus.be.server.outbox.domain.EventType
 import kr.hhplus.be.server.outbox.domain.OutboxStatus
 import kr.hhplus.be.server.outbox.port.OutboxRepository
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
+import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.service.ReservationService
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -34,6 +37,15 @@ class ReservationServiceIntegrationTest {
 
     @Autowired
     private lateinit var memberRepository: MemberRepository
+
+    @Autowired
+    lateinit var redisReservationOperations: RedisReservationOperations
+
+    @BeforeEach
+    @AfterEach
+    fun redisCleanup() {
+        redisReservationOperations.cleanUp()
+    }
 
     @Test
     fun `예약 생성 시 예약정보와 아웃박스 메시지가 함께 저장된다`() {
