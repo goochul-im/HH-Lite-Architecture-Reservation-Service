@@ -1,8 +1,7 @@
 package kr.hhplus.be.server.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import jakarta.persistence.Tuple
 import jakarta.transaction.Transactional
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.point.controller.UsePointReq
@@ -10,9 +9,8 @@ import kr.hhplus.be.server.application.point.dto.PointResponse
 import kr.hhplus.be.server.application.wating.service.WaitingQueueService
 import kr.hhplus.be.server.auth.LoginRequest
 import kr.hhplus.be.server.auth.TokenResponse
-import kr.hhplus.be.server.member.domain.Member
+import kr.hhplus.be.server.exception.DuplicateResourceException
 import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
-import kr.hhplus.be.server.member.port.MemberRepository
 import kr.hhplus.be.server.member.service.MemberService
 import kr.hhplus.be.server.outbox.scheduler.OutboxScheduler
 import kr.hhplus.be.server.reservation.controller.ReservationMakeRequest
@@ -20,12 +18,8 @@ import kr.hhplus.be.server.reservation.dto.ReservationResponse
 import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
-import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
-import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.TempReservationPort
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.*
-import org.junit.Before
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -34,14 +28,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
-import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.web.util.NestedServletException
 import java.time.LocalDate
 
 @SpringBootTest
@@ -83,10 +76,16 @@ class ApplicationIntegrationTest {
 
     @BeforeEach
     fun `로그인 후 액세스 토큰과 대기열 토큰 생성`() {
-        val saveMember = memberService.signUp("testUser", "testPassword")
+        val (access, waiting) = getAccessAndWaitingToken("testUser1")
+        accessToken = access
+        waitingToken = waiting
+    }
+
+    private fun getAccessAndWaitingToken(username: String) : Pair<String, String> {
+        val saveMember = memberService.signUp(username, "testPassword")
 
         val loginRequest = LoginRequest(
-            "testUser",
+            username,
             "testPassword"
         )
 
@@ -100,23 +99,26 @@ class ApplicationIntegrationTest {
 
         val content = result.response.contentAsString
         val loginResponse = objectMapper.readValue(content, TokenResponse::class.java)
-        accessToken = loginResponse.accessToken.toString()
 
         // 액세스 토큰을 이용해 대기열 토큰 발급
         val enterResult = mockMvc.perform(
             post("/api/wait/enter")
-                .header("Authorization", "Bearer $accessToken")
+                .header("Authorization", "Bearer ${loginResponse.accessToken.toString()}")
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk)
             .andReturn()
 
         val enterContent = enterResult.response.contentAsString
         val enterResponse = objectMapper.readValue(enterContent, TokenResponse::class.java)
-        waitingToken = enterResponse.waitingToken.toString()
 
         waitingQueueService.enterQueue() // 즉시 대기열에서 접속상태로 변경
+
+        return Pair(loginResponse.accessToken.toString(), enterResponse.waitingToken.toString())
     }
 
+    /**
+     * Redis는 수동으로 초기화를 진행해줘야 함
+     */
     @AfterEach
     fun cleanUpRedis() {
         redisOperation.cleanUp()
@@ -210,6 +212,31 @@ class ApplicationIntegrationTest {
             10,
             ReservationStatus.RESERVE
         )
+    }
+
+    @Test
+    fun `여러 유저가 동시에 좌석을 요청해도 한 명만 성공한다`(){
+        //given
+        val (userB_AccessToken, userB_WaitingToken) = getAccessAndWaitingToken("testUser2") // 다른 유저 로그인
+        chargePoint(accessToken)
+        chargePoint(userB_AccessToken)
+
+        val request = ReservationMakeRequest(
+            LocalDate.of(2025, 12, 1),
+            10
+        )
+
+        makeReservation(request, accessToken, waitingToken)
+
+        //when & then
+        mockMvc.perform(
+            post("/api/reservation") // 예약 생성
+                .header("Authorization", "Bearer $userB_AccessToken")
+                .header("X-Waiting-Token", "Bearer $userB_WaitingToken")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+        ).andExpect(status().isConflict)
+
     }
 
     private fun payReservation(reservationId : Long, access: String, waiting: String) {
