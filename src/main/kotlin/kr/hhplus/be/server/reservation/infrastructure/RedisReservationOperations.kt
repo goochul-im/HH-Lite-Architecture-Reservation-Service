@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.reservation.service.port
+package kr.hhplus.be.server.reservation.infrastructure
 
 interface RedisReservationOperations {
 
@@ -33,4 +33,6 @@ interface RedisReservationOperations {
      * Redis Set에서 특정 좌석 제거
      */
     fun removeFromReserveSet(reserveKey: String, seatNumber: Int)
+
+    fun cleanUp()
 }

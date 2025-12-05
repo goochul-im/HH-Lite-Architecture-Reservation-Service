@@ -32,7 +32,7 @@ class JwtAuthenticationFilter(
     }
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
-        val path = request.servletPath
+        val path = request.requestURI
         return SecurityConstant.PUBLIC_URIS.any { matcher.match(it, path) }
     }
 
@@ -43,7 +43,7 @@ class JwtAuthenticationFilter(
     ) {
         val accessToken = resolveToken(request, ACCESS_TOKEN_HEADER)
         val waitingToken = resolveToken(request, WAITING_TOKEN_HEADER)
-        val path = request.servletPath
+        val path = request.requestURI
 
         try {
             // 1. Access Token 검증 (대기열 진입 API 포함 모든 인증 필요 API)

@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.domain.reservation
 
-import kr.hhplus.be.server.reservation.service.TempReservationAdaptor
-import kr.hhplus.be.server.reservation.TempReservationConstant
-import kr.hhplus.be.server.reservation.TempReservationListener
+import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
+import kr.hhplus.be.server.reservation.infrastructure.TempReservationConstant
+import kr.hhplus.be.server.reservation.listener.TempReservationListener
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.DisplayName

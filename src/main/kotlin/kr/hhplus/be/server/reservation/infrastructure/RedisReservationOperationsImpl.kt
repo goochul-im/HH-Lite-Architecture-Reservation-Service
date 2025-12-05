@@ -1,6 +1,6 @@
-package kr.hhplus.be.server.reservation.service
+package kr.hhplus.be.server.reservation.infrastructure
 
-import kr.hhplus.be.server.reservation.service.port.RedisReservationOperations
+import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 
@@ -52,5 +52,9 @@ class RedisReservationOperationsImpl(
 
     override fun removeFromReserveSet(reserveKey: String, seatNumber: Int) {
         redisTemplate.opsForSet().remove(reserveKey, seatNumber.toString())
+    }
+
+    override fun cleanUp() {
+        redisTemplate.connectionFactory?.connection?.serverCommands()?.flushDb()
     }
 }

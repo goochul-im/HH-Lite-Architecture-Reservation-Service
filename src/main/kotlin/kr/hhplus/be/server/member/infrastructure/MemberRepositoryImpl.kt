@@ -24,11 +24,16 @@ class MemberRepositoryImpl(
         return memberJpaEntity.toDomain()
     }
 
-    override fun save(member: Member): Member {
+    override fun signUp(member: Member): Member {
         if (memberJpaRepository.countByUsername(member.username) > 0) {
             throw DuplicateResourceException("Member username : ${member.username} is duplicate")
         }
 
+        val entity = MemberEntity.from(member)
+        return memberJpaRepository.save(entity).toDomain()
+    }
+
+    override fun save(member: Member): Member {
         val entity = MemberEntity.from(member)
         return memberJpaRepository.save(entity).toDomain()
     }

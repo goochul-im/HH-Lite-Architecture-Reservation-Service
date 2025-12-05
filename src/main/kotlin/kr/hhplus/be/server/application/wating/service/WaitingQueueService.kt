@@ -30,7 +30,7 @@ class WaitingQueueService(
         return true
     }
 
-    @Scheduled(fixedRate = 10000)
+    @Scheduled(fixedRate = 1000)
     fun enterQueue() {
         waitingQueuePort.enteringQueue()
     }

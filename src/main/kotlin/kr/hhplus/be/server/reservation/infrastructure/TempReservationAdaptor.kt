@@ -1,12 +1,10 @@
-package kr.hhplus.be.server.reservation.service
+package kr.hhplus.be.server.reservation.infrastructure
 
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
-import kr.hhplus.be.server.reservation.TempReservationConstant
-import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.infrastructure.TempReservationConstant
 import kr.hhplus.be.server.reservation.port.TempReservationPort
-import kr.hhplus.be.server.reservation.service.port.RedisReservationOperations
+import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.LocalDate

@@ -10,6 +10,7 @@ object SecurityConstant {
 
     val NO_WAITING_TOKEN_PATH = arrayOf(
         "/api/pay/**",
+        "/api/point/**",
         "/api/wait/enter",
     )
 }
