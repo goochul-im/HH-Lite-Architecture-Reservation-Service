@@ -10,6 +10,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 import kr.hhplus.be.server.common.BaseEntity
 import kr.hhplus.be.server.member.domain.Member
 import kr.hhplus.be.server.member.infrastructure.MemberEntity
@@ -17,6 +19,14 @@ import kr.hhplus.be.server.reservation.domain.Reservation
 import java.time.LocalDate
 
 @Entity
+@Table(
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_reservation_date_seat",
+            columnNames = ["reservation_date", "seat_num"]
+        )
+    ]
+)
 class ReservationEntity(
 
     @Id
