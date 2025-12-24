@@ -18,6 +18,7 @@ import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 
@@ -84,7 +85,11 @@ class ReservationService(
         }
 
         reserver.usePoint(price)
-        reserver = memberRepository.save(reserver)
+        try {
+            reserver = memberRepository.saveAndFlush(reserver)
+        } catch (e: ObjectOptimisticLockingFailureException) {
+            throw DuplicateResourceException("이미 결제된 자리입니다. ${e.message}")
+        }
         reservation.reserver = reserver
 
         reservation.status = ReservationStatus.RESERVE

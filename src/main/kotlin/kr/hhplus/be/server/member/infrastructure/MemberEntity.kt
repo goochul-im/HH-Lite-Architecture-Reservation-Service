@@ -5,10 +5,12 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Version
 import kr.hhplus.be.server.common.BaseEntity
 import kr.hhplus.be.server.member.domain.Member
 
 @Entity
+
 class MemberEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -18,15 +20,18 @@ class MemberEntity(
     @Column
     val username: String,
     @Column
-    var password: String
+    var password: String,
+    @Version
+    var version: Long = 0,
 ) : BaseEntity() {
 
-    public fun toDomain(): Member {
+    fun toDomain(): Member {
         return Member(
             this.id,
             this.point,
             this.username,
             this.password,
+            this.version
         )
     }
 
@@ -37,7 +42,8 @@ class MemberEntity(
                 member.id,
                 member.point,
                 member.username,
-                member.password
+                member.password,
+                member.version
             )
         }
 

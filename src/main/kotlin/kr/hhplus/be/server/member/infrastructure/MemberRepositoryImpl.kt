@@ -37,4 +37,11 @@ class MemberRepositoryImpl(
         val entity = MemberEntity.from(member)
         return memberJpaRepository.save(entity).toDomain()
     }
+
+    override fun saveAndFlush(member: Member): Member {
+        val entity = MemberEntity.from(member)
+        val domain = memberJpaRepository.save(entity).toDomain()
+        memberJpaRepository.flush()
+        return domain
+    }
 }
