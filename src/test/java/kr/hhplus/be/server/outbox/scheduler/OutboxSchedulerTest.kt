@@ -6,14 +6,13 @@ import kr.hhplus.be.server.outbox.domain.OutboxMessage
 import kr.hhplus.be.server.outbox.domain.OutboxStatus
 import kr.hhplus.be.server.outbox.port.OutboxHandler
 import kr.hhplus.be.server.outbox.port.OutboxRepository
-import org.junit.jupiter.api.Assertions.assertDoesNotThrow
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito
 import org.mockito.Mock
-import org.mockito.Mockito.verify
+import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.never
@@ -38,14 +37,14 @@ class OutboxSchedulerTest {
     @Test
     fun `스케줄링 실행시 대기중인 메시지가 없으면 로직이 실행되지 않는다`() {
         // given
-        given(outboxRepository.getPendingList()).willReturn(emptyList())
+        BDDMockito.given(outboxRepository.getPendingList()).willReturn(emptyList())
 
         // when
         outboxScheduler.schedule()
 
         // then
-        verify(outboxHandler, never()).canHandle(any())
-        verify(outboxHandler, never()).handle(any())
+        Mockito.verify(outboxHandler, never()).canHandle(any())
+        Mockito.verify(outboxHandler, never()).handle(any())
     }
 
     @Test
@@ -58,14 +57,14 @@ class OutboxSchedulerTest {
             payload = mapOf("key" to "value"),
             status = OutboxStatus.PENDING
         )
-        given(outboxRepository.getPendingList()).willReturn(listOf(message))
-        given(outboxHandler.canHandle(AggregateType.TEMP_RESERVATION)).willReturn(true)
+        BDDMockito.given(outboxRepository.getPendingList()).willReturn(listOf(message))
+        BDDMockito.given(outboxHandler.canHandle(AggregateType.TEMP_RESERVATION)).willReturn(true)
 
         // when
         outboxScheduler.schedule()
 
         // then
-        verify(outboxHandler, times(1)).handle(message)
+        Mockito.verify(outboxHandler, times(1)).handle(message)
     }
 
     @Test
@@ -78,15 +77,15 @@ class OutboxSchedulerTest {
             payload = mapOf("key" to "value"),
             status = OutboxStatus.PENDING
         )
-        given(outboxRepository.getPendingList()).willReturn(listOf(message))
-        given(outboxHandler.canHandle(AggregateType.TEMP_RESERVATION)).willReturn(false)
+        BDDMockito.given(outboxRepository.getPendingList()).willReturn(listOf(message))
+        BDDMockito.given(outboxHandler.canHandle(AggregateType.TEMP_RESERVATION)).willReturn(false)
 
         // when & then
-        assertDoesNotThrow {
+        Assertions.assertDoesNotThrow {
             outboxScheduler.schedule()
         }
 
-        verify(outboxHandler, never()).handle(message)
+        Mockito.verify(outboxHandler, never()).handle(message)
     }
 
     @Test
@@ -99,15 +98,15 @@ class OutboxSchedulerTest {
             payload = mapOf("key" to "value"),
             status = OutboxStatus.PENDING
         )
-        given(outboxRepository.getPendingList()).willReturn(listOf(message))
-        given(outboxHandler.canHandle(AggregateType.TEMP_RESERVATION)).willReturn(true)
-        given(outboxHandler.handle(message)).willThrow(RuntimeException("Processing failed"))
+        BDDMockito.given(outboxRepository.getPendingList()).willReturn(listOf(message))
+        BDDMockito.given(outboxHandler.canHandle(AggregateType.TEMP_RESERVATION)).willReturn(true)
+        BDDMockito.given(outboxHandler.handle(message)).willThrow(RuntimeException("Processing failed"))
 
         // when & then
-        assertDoesNotThrow {
+        Assertions.assertDoesNotThrow {
             outboxScheduler.schedule()
         }
 
-        verify(outboxHandler, times(1)).handle(message)
+        Mockito.verify(outboxHandler, times(1)).handle(message)
     }
 }
