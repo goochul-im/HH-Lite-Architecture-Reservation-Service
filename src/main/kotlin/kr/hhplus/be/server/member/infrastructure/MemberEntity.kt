@@ -5,12 +5,13 @@ import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Table
 import jakarta.persistence.Version
 import kr.hhplus.be.server.common.BaseEntity
 import kr.hhplus.be.server.member.domain.Member
 
 @Entity
-
+@Table(name = "member")
 class MemberEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

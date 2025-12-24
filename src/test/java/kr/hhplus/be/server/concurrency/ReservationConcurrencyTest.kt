@@ -19,12 +19,14 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import org.springframework.test.context.jdbc.Sql
 import java.time.LocalDate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
+@Sql(scripts = ["/test-index-setup.sql"], executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 @Import(TestcontainersConfiguration::class)
 class ReservationConcurrencyTest {
 

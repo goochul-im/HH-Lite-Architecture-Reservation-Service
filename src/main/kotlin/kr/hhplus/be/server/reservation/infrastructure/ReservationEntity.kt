@@ -19,14 +19,7 @@ import kr.hhplus.be.server.reservation.domain.Reservation
 import java.time.LocalDate
 
 @Entity
-@Table(
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uk_reservation_date_seat",
-            columnNames = ["reservation_date", "seat_num"]
-        )
-    ]
-)
+@Table(name = "reservation")
 class ReservationEntity(
 
     @Id
