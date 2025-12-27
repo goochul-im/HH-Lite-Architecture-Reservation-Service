@@ -145,7 +145,7 @@ class ReservationServiceTest {
         given(memberRepository.findById(memberId)).willReturn(member)
         given(reservationRepository.findReservationByIdAndReserver(reservationId, member.id!!)).willReturn(reservation)
         given(reservationRepository.save(any())).willAnswer { it.arguments[0] }
-        given(memberRepository.save(any())).willAnswer { it.arguments[0] }
+        given(memberRepository.saveAndFlush(any())).willAnswer { it.arguments[0] }
 
         //when
         val result = reservationService.payReservation(reservationId, memberId)

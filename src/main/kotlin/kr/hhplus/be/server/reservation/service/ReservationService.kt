@@ -17,6 +17,8 @@ import kr.hhplus.be.server.reservation.dto.TempReservationPayload
 import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 
@@ -44,7 +46,11 @@ class ReservationService(
             reserver = memberRepository.findById(dto.memberId)
         )
 
-        val save : Reservation = reservationRepository.save(reservation)
+        val save : Reservation = try {
+            reservationRepository.save(reservation)
+        } catch (e: DataIntegrityViolationException) {
+            throw DuplicateResourceException("이미 예약되어있는 좌석입니다.")
+        }
 
         val outboxMessage = OutboxMessage(
             aggregateType = AggregateType.TEMP_RESERVATION,
@@ -79,7 +85,11 @@ class ReservationService(
         }
 
         reserver.usePoint(price)
-        reserver = memberRepository.save(reserver)
+        try {
+            reserver = memberRepository.saveAndFlush(reserver)
+        } catch (e: ObjectOptimisticLockingFailureException) {
+            throw DuplicateResourceException("이미 결제된 자리입니다. ${e.message}")
+        }
         reservation.reserver = reserver
 
         reservation.status = ReservationStatus.RESERVE

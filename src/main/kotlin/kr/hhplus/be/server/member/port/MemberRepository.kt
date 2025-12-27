@@ -10,6 +10,8 @@ interface MemberRepository {
 
     fun save(member: Member) : Member
 
+    fun saveAndFlush(member: Member) : Member
+
     fun signUp(member: Member) : Member
 
 }

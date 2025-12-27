@@ -7,7 +7,8 @@ class Member(
     val id: String? = null,
     var point: Int = 0,
     val username: String,
-    var password:String
+    var password:String,
+    val version: Long = 0
 ) {
 
     fun chargePoint(amount: Int) {

@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.Table
 import kr.hhplus.be.server.common.BaseEntity
 import kr.hhplus.be.server.common.util.SerializeUtil
@@ -18,7 +19,12 @@ import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "outbox")
+@Table(
+    name = "outbox",
+    indexes = [
+        Index(name = "idx_status_created_at", columnList = "status, created_at")
+    ]
+)
 class OutboxEntity(
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
@@ -43,7 +49,7 @@ class OutboxEntity(
 
 ) : BaseEntity() {
 
-    fun toDomain() : OutboxMessage {
+    fun toDomain(): OutboxMessage {
         return OutboxMessage(
             this.id,
             this.aggregateType,
