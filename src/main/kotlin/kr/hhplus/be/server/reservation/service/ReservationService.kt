@@ -17,6 +17,8 @@ import kr.hhplus.be.server.reservation.dto.TempReservationPayload
 import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
@@ -33,6 +35,7 @@ class ReservationService(
 ) {
 
     @Transactional
+    @CacheEvict(value = ["availableSeats"], key = "#dto.date.toString()")
     fun make(dto: ReservationRequest) : Reservation {
 
         if (!getAvailableSeat(dto.date).contains(dto.seatNumber)) {
@@ -63,6 +66,7 @@ class ReservationService(
         return save
     }
 
+    @Cacheable(value = ["availableSeats"], key = "#date.toString()")
     fun getAvailableSeat(date: LocalDate): List<Int> {
         val seatInPersistent = reservationRepository.getReservedSeatNumber(date).toSet()
         val seatInTemp = tempReservationService.getTempReservation(date).toSet()
