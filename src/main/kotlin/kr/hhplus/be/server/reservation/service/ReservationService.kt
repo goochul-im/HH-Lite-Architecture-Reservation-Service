@@ -15,6 +15,7 @@ import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.dto.TempReservationPayload
 import kr.hhplus.be.server.reservation.port.ReservationRepository
+import kr.hhplus.be.server.reservation.port.SeatFinder
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheEvict
@@ -31,14 +32,15 @@ class ReservationService(
     private val memberRepository: MemberRepository,
     @param:Value("\${reservation.price}")
     private val price: Int,
-    private val outboxRepository: OutboxRepository
+    private val outboxRepository: OutboxRepository,
+    private val seatFinder: SeatFinder
 ) {
 
     @Transactional
     @CacheEvict(value = ["availableSeats"], key = "#dto.date.toString()")
     fun make(dto: ReservationRequest) : Reservation {
 
-        if (!getAvailableSeat(dto.date).contains(dto.seatNumber)) {
+        if (!seatFinder.getAvailableSeat(dto.date).contains(dto.seatNumber)) {
             throw DuplicateResourceException("이미 예약되어있는 좌석입니다.")
         }
 
@@ -64,16 +66,6 @@ class ReservationService(
 
         outboxRepository.save(outboxMessage)
         return save
-    }
-
-    @Cacheable(value = ["availableSeats"], key = "#date.toString()")
-    fun getAvailableSeat(date: LocalDate): List<Int> {
-        val seatInPersistent = reservationRepository.getReservedSeatNumber(date).toSet()
-        val seatInTemp = tempReservationService.getTempReservation(date).toSet()
-
-        val availableSeat = (1..50).filter { !seatInPersistent.contains(it) && !seatInTemp.contains(it) }
-
-        return availableSeat
     }
 
     @Transactional

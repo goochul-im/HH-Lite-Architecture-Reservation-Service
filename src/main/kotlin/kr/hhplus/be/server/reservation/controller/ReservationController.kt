@@ -10,6 +10,7 @@ import kr.hhplus.be.server.reservation.dto.AvailableSeatsResponse
 import kr.hhplus.be.server.reservation.dto.PayReservationResponse
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.dto.ReservationResponse
+import kr.hhplus.be.server.reservation.port.SeatFinder
 import kr.hhplus.be.server.reservation.service.ReservationService
 //import org.apache.catalina.User
 import org.springframework.http.ResponseEntity
@@ -29,7 +30,7 @@ import java.time.LocalDate
 @RequestMapping("/api/reservation")
 class ReservationController(
     private val reservationService: ReservationService,
-
+    private val seatFinder: SeatFinder
 ) {
 
     @Operation(summary = "콘서트 좌석 예약", description = "특정 날짜의 콘서트 좌석을 예약합니다.")
@@ -62,7 +63,7 @@ class ReservationController(
     fun getAvailableSeatNumbers(
         @RequestParam date: LocalDate
     ): ResponseEntity<AvailableSeatsResponse> {
-        val list = reservationService.getAvailableSeat(date)
+        val list = seatFinder.getAvailableSeat(date)
         return ResponseEntity.ok(
             AvailableSeatsResponse(
                 date = date,
