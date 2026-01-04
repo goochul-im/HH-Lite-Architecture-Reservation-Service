@@ -73,6 +73,7 @@ dependencies {
 
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.redisson:redisson-spring-boot-starter:3.24.3")
 
     // json mapper
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
