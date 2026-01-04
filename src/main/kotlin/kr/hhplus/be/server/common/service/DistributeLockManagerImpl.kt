@@ -2,9 +2,7 @@ package kr.hhplus.be.server.common.service
 
 import io.jsonwebtoken.lang.Supplier
 import kr.hhplus.be.server.common.port.DistributeLockManager
-import kr.hhplus.be.server.common.port.RedisLockOperations
 import kr.hhplus.be.server.exception.LockException
-import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import mu.KotlinLogging
 import org.redisson.api.RLock
 import org.redisson.api.RedissonClient
