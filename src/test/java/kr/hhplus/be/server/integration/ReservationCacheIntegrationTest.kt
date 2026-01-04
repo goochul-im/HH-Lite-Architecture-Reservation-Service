@@ -6,6 +6,7 @@ import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
+import kr.hhplus.be.server.reservation.port.SeatFinder
 import kr.hhplus.be.server.reservation.service.ReservationService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -27,6 +28,9 @@ class ReservationCacheIntegrationTest {
 
     @Autowired
     private lateinit var reservationService: ReservationService
+
+    @Autowired
+    private lateinit var seatFinder: SeatFinder
 
     @SpyBean
     private lateinit var reservationJpaRepository: ReservationJpaRepository
@@ -62,11 +66,11 @@ class ReservationCacheIntegrationTest {
         val date = LocalDate.now()
 
         // 1. 첫 번째 호출: Cache Miss -> DB 조회 발생
-        reservationService.getAvailableSeat(date)
+        seatFinder.getAvailableSeat(date)
         verify(reservationJpaRepository, times(1)).getReservedSeatNumber(date)
 
         // 2. 두 번째 호출: Cache Hit -> DB 조회 발생 X
-        reservationService.getAvailableSeat(date)
+        seatFinder.getAvailableSeat(date)
         verify(reservationJpaRepository, times(1)).getReservedSeatNumber(date)
     }
 
@@ -76,7 +80,7 @@ class ReservationCacheIntegrationTest {
         val dto = ReservationRequest(date = date, memberId = testMember.id!!, seatNumber = 1)
 
         // 1. 조회하여 캐시 생성
-        reservationService.getAvailableSeat(date)
+        seatFinder.getAvailableSeat(date)
         verify(reservationJpaRepository, times(1)).getReservedSeatNumber(date)
 
         // Mock 리셋
@@ -99,7 +103,7 @@ class ReservationCacheIntegrationTest {
         // 3. getAvailableSeat -> Cache Miss (DB 조회 발생)
         
         clearInvocations(reservationJpaRepository)
-        reservationService.getAvailableSeat(date)
+        seatFinder.getAvailableSeat(date)
         // 여기서 DB 조회가 발생해야 함. (Evict가 잘 되었다면)
         verify(reservationJpaRepository, times(1)).getReservedSeatNumber(date)
     }
@@ -113,19 +117,19 @@ class ReservationCacheIntegrationTest {
         val reservation = reservationService.make(dto)
         
         // 2. 조회하여 캐시 생성
-        reservationService.getAvailableSeat(date)
+        seatFinder.getAvailableSeat(date)
         
         clearInvocations(reservationJpaRepository)
 
         // 3. 캐시 Hit 확인
-        reservationService.getAvailableSeat(date)
+        seatFinder.getAvailableSeat(date)
         verify(reservationJpaRepository, times(0)).getReservedSeatNumber(date)
 
         // 4. 만료 처리 (수동 Evict 로직 동작)
         tempReservationAdaptor.cleanupExpiredReservation(reservation.id!!)
 
         // 5. 재조회: Evict 되었으므로 DB 조회 다시 발생 (총 1회)
-        reservationService.getAvailableSeat(date)
+        seatFinder.getAvailableSeat(date)
         verify(reservationJpaRepository, times(1)).getReservedSeatNumber(date)
     }
 }
