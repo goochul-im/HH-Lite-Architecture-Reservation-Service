@@ -48,6 +48,9 @@ class TempReservationAdaptor(
         val reserveKey = getReservedKey(reservation.date)
         redisOperations.removeFromReserveSet(reserveKey, reservation.seatNumber)
 
+        val seatListKey = "${TempReservationConstant.TEMP_RESERVATIONS}$reservationId"
+        redisOperations.deleteReservation(seatListKey)
+
         // 3. RDB 예약 상태 변경
         reservation.status = ReservationStatus.CANCEL
         reservationJpaRepository.save(reservation)

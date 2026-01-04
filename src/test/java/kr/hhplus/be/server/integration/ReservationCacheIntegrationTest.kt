@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
+import org.redisson.api.RedissonClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
@@ -42,7 +43,7 @@ class ReservationCacheIntegrationTest {
     private lateinit var tempReservationAdaptor: TempReservationAdaptor
 
     @Autowired
-    private lateinit var redisTemplate: RedisTemplate<String, String>
+    private lateinit var redissonClient: RedissonClient
 
     @Autowired
     private lateinit var cacheManager: CacheManager
@@ -53,7 +54,7 @@ class ReservationCacheIntegrationTest {
     fun setUp() {
         reservationJpaRepository.deleteAll()
         memberJpaRepository.deleteAll()
-        redisTemplate.connectionFactory?.connection?.flushAll()
+        redissonClient.keys.flushall()
         
         // 캐시 초기화
         cacheManager.getCache("availableSeats")?.clear()

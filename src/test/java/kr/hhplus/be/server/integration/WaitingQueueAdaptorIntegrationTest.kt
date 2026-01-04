@@ -7,11 +7,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.redisson.api.RedissonClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.test.context.ActiveProfiles
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 
 @SpringBootTest
@@ -23,17 +25,18 @@ class WaitingQueueAdaptorIntegrationTest {
     private lateinit var waitingQueueAdaptor: WaitingQueueAdaptor
 
     @Autowired
-    private lateinit var redisTemplate: StringRedisTemplate
+    private lateinit var redissonClient: RedissonClient
 
     @AfterEach
     fun tearDown() {
-        redisTemplate.delete(WaitingQueueConstant.ZSET_WAIT_KEY)
-        val keys = redisTemplate.keys("${WaitingQueueConstant.ENTER_LIST_KEY}*")
-        if (keys != null && keys.isNotEmpty()) {
-            redisTemplate.delete(keys)
-        }
-    }
+        // 1. 특정 대기열 ZSET 삭제
+        redissonClient.getScoredSortedSet<String>(WaitingQueueConstant.ZSET_WAIT_KEY).delete()
 
+        // 2. 패턴을 이용한 대기열 진입 키들 일괄 삭제
+        // keys().deleteByPattern은 Redis의 SCAN 명령을 사용하여 안전하게 대량의 키를 삭제합니다.
+        val pattern = "${WaitingQueueConstant.ENTER_LIST_KEY}*"
+        redissonClient.keys.deleteByPattern(pattern)
+    }
 
     @Test
     @DisplayName("대기열 추가 및 순위 확인 테스트")
@@ -44,7 +47,7 @@ class WaitingQueueAdaptorIntegrationTest {
 
         // when
         waitingQueueAdaptor.add(userId1)
-        Thread.sleep(10) // Ensure different scores
+        Thread.sleep(10) // 스코어 차이를 위해 잠시 대기
         waitingQueueAdaptor.add(userId2)
 
         // then
@@ -62,9 +65,9 @@ class WaitingQueueAdaptorIntegrationTest {
         val userId = "testUser"
         val enteringKey = "${WaitingQueueConstant.ENTER_LIST_KEY}$userId"
 
-        // when
+        // when - redisTemplate 대신 Redisson의 RBucket 사용
         val before = waitingQueueAdaptor.isEnteringKey(userId)
-        redisTemplate.opsForValue().set(enteringKey, "1")
+        redissonClient.getBucket<String>(enteringKey).set("1")
         val after = waitingQueueAdaptor.isEnteringKey(userId)
 
         // then
@@ -78,13 +81,13 @@ class WaitingQueueAdaptorIntegrationTest {
         // given
         val userId = "testUser"
         val enteringKey = "${WaitingQueueConstant.ENTER_LIST_KEY}$userId"
-        redisTemplate.opsForValue().set(enteringKey, "1")
+        redissonClient.getBucket<String>(enteringKey).set("1")
 
         // when
         waitingQueueAdaptor.deleteToken(userId)
 
-        // then
-        val keyExists = redisTemplate.hasKey(enteringKey)
+        // then - hasKey 대신 isExists 사용
+        val keyExists = redissonClient.getBucket<String>(enteringKey).isExists
         assertThat(keyExists).isFalse()
     }
 
@@ -94,17 +97,17 @@ class WaitingQueueAdaptorIntegrationTest {
         // given
         val userId = "testUser"
         val enteringKey = "${WaitingQueueConstant.ENTER_LIST_KEY}$userId"
-        redisTemplate.opsForValue().set(enteringKey, "1", 10, TimeUnit.SECONDS)
+        // 처음엔 10초로 설정
+        redissonClient.getBucket<String>(enteringKey).set("1", Duration.ofSeconds(10))
 
         // when
-        val ttlBefore = redisTemplate.getExpire(enteringKey, TimeUnit.SECONDS)
+        val ttlBefore = redissonClient.getBucket<String>(enteringKey).remainTimeToLive() // ms 단위 반환
         waitingQueueAdaptor.renewalTokenTTL(userId)
-        val ttlAfter = redisTemplate.getExpire(enteringKey, TimeUnit.SECONDS)
+        val ttlAfter = redissonClient.getBucket<String>(enteringKey).remainTimeToLive()
 
         // then
-        assertThat(ttlBefore).isNotNull()
-        assertThat(ttlAfter).isNotNull()
-        assertThat(ttlAfter).isGreaterThan(ttlBefore!!)
+        assertThat(ttlBefore).isGreaterThan(0)
+        assertThat(ttlAfter).isGreaterThan(ttlBefore)
     }
 
     @Test
