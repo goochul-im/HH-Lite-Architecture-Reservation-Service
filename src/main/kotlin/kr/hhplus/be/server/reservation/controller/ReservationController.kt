@@ -11,6 +11,7 @@ import kr.hhplus.be.server.reservation.dto.PayReservationResponse
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.dto.ReservationResponse
 import kr.hhplus.be.server.reservation.port.SeatFinder
+import kr.hhplus.be.server.reservation.service.ReservationFacade
 import kr.hhplus.be.server.reservation.service.ReservationService
 //import org.apache.catalina.User
 import org.springframework.http.ResponseEntity
@@ -30,7 +31,8 @@ import java.time.LocalDate
 @RequestMapping("/api/reservation")
 class ReservationController(
     private val reservationService: ReservationService,
-    private val seatFinder: SeatFinder
+    private val seatFinder: SeatFinder,
+    private val reservationFacade: ReservationFacade
 ) {
 
     @Operation(summary = "콘서트 좌석 예약", description = "특정 날짜의 콘서트 좌석을 예약합니다.")
@@ -40,7 +42,7 @@ class ReservationController(
         @AuthenticationPrincipal user: User,
         @RequestBody req: ReservationMakeRequest
     ): ResponseEntity<ReservationResponse> {
-        val reservation : Reservation = reservationService.make(
+        val reservation : Reservation = reservationFacade.makeWithLock(
             ReservationRequest(
                 req.date,
                 user.username,
