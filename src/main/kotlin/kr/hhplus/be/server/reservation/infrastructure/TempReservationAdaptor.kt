@@ -6,6 +6,7 @@ import kr.hhplus.be.server.reservation.infrastructure.TempReservationConstant
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
@@ -13,6 +14,7 @@ import java.time.LocalDate
 class TempReservationAdaptor(
     private val redisOperations: RedisReservationOperations,
     private val reservationJpaRepository: ReservationJpaRepository,
+    private val cacheManager: CacheManager
 ) : TempReservationPort {
 
     @Value("\${reservation.pending-timeout-seconds}")
@@ -46,9 +48,15 @@ class TempReservationAdaptor(
         val reserveKey = getReservedKey(reservation.date)
         redisOperations.removeFromReserveSet(reserveKey, reservation.seatNumber)
 
+        val seatListKey = "${TempReservationConstant.TEMP_RESERVATIONS}$reservationId"
+        redisOperations.deleteReservation(seatListKey)
+
         // 3. RDB 예약 상태 변경
         reservation.status = ReservationStatus.CANCEL
         reservationJpaRepository.save(reservation)
+        
+        // 4. 캐시 무효화
+        cacheManager.getCache("availableSeats")?.evict(reservation.date.toString())
     }
 
     override fun delete(reservationId: Long) {

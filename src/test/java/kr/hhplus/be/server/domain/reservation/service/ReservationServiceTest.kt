@@ -13,6 +13,7 @@ import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.port.ReservationRepository
+import kr.hhplus.be.server.reservation.port.SeatFinder
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import kr.hhplus.be.server.reservation.service.ReservationService
 import org.assertj.core.api.Assertions.*
@@ -42,6 +43,9 @@ class ReservationServiceTest {
     @Mock
     lateinit var outboxRepository: OutboxRepository
 
+    @Mock
+    lateinit var seatFinder: SeatFinder
+
     private lateinit var reservationService: ReservationService
 
     @BeforeEach
@@ -51,7 +55,8 @@ class ReservationServiceTest {
             tempReservationService,
             memberRepository,
             1000,
-            outboxRepository
+            outboxRepository,
+            seatFinder
         )
     }
 
@@ -77,6 +82,7 @@ class ReservationServiceTest {
 
         given(memberRepository.findById(memberId)).willReturn(member)
         given(reservationRepository.save(any())).willReturn(reservation)
+        given(seatFinder.getAvailableSeat(any())).willReturn(listOf(seatNumber))
 
         // When
         val result = reservationService.make(request)
@@ -95,34 +101,6 @@ class ReservationServiceTest {
 
         verify(reservationRepository, times(1)).save(any())
         verify(outboxRepository, times(1)).save(any())
-    }
-
-    @Test
-    fun `선택한 날짜의 예약 가능한 자리를 가져올 수 있다`() {
-        //given
-        val date = LocalDate.now()
-        given(reservationRepository.getReservedSeatNumber(date)).willReturn(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9))
-        given(tempReservationService.getTempReservation(date)).willReturn(
-            listOf(
-                41,
-                42,
-                43,
-                44,
-                45,
-                46,
-                47,
-                48,
-                49,
-                50
-            )
-        )
-
-        //when
-        val result = reservationService.getAvailableSeat(date)
-
-        //then
-        val expect = (10..40).toList()
-        assertThat(result).containsAll(expect)
     }
 
     @Test

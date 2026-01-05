@@ -19,6 +19,7 @@ import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.port.TempReservationPort
+import kr.hhplus.be.server.reservation.service.ReservationFacade
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -67,6 +68,9 @@ class ApplicationIntegrationTest {
 
     @Autowired
     lateinit var redisOperation: RedisReservationOperations
+
+    @Autowired
+    lateinit var reservationFacade: ReservationFacade
 
     @Autowired
     lateinit var outboxScheduler: OutboxScheduler

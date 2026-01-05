@@ -1,18 +1,24 @@
 package kr.hhplus.be.server.config.redis
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.cache.CacheManager
+import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.data.redis.cache.RedisCacheConfiguration
+import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.connection.RedisConnectionFactory
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
-import org.springframework.data.redis.serializer.GenericToStringSerializer
+import org.springframework.data.redis.serializer.RedisSerializationContext
 import org.springframework.data.redis.serializer.StringRedisSerializer
+import java.time.Duration
+
 
 @Configuration
+@EnableCaching
 class RedisConfig(
     @param:Value("\${spring.data.redis.host}")
     private val host: String,
@@ -55,6 +61,29 @@ class RedisConfig(
         // container.setTaskExecutor(Executors.newFixedThreadPool(4))
 
         return container
+    }
+
+    @Bean("cacheManager")
+    fun redisCacheManager(connectionFactory: RedisConnectionFactory): CacheManager {
+        val config: RedisCacheConfiguration =
+            RedisCacheConfiguration.defaultCacheConfig() // 1. 데이터 직렬화 설정 (JSON 형태로 저장)
+                .serializeKeysWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer<String?>(
+                        StringRedisSerializer()
+                    )
+                )
+                .serializeValuesWith(
+                    RedisSerializationContext.SerializationPair.fromSerializer<Any?>(
+                        GenericJackson2JsonRedisSerializer()
+                    )
+                ) // 2. 캐시 만료 시간(TTL) 설정 (예: 10분)
+                .entryTtl(Duration.ofMinutes(10)) // 3. Null 값은 캐싱하지 않음 (선택)
+                .disableCachingNullValues()
+
+        return RedisCacheManager.RedisCacheManagerBuilder
+            .fromConnectionFactory(connectionFactory)
+            .cacheDefaults(config)
+            .build()
     }
 
 }
