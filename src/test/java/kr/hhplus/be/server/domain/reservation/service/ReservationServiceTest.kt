@@ -1,16 +1,14 @@
 package kr.hhplus.be.server.domain.reservation.service
 
-import kr.hhplus.be.server.reservation.dto.ReservationRequest
+import kr.hhplus.be.server.concert.domain.Concert
+import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
+import kr.hhplus.be.server.concert.port.ConcertRepository
 import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.member.port.MemberRepository
-import kr.hhplus.be.server.outbox.domain.AggregateType
-import kr.hhplus.be.server.outbox.domain.EventType
-import kr.hhplus.be.server.outbox.domain.OutboxMessage
-import kr.hhplus.be.server.outbox.domain.OutboxStatus
 import kr.hhplus.be.server.outbox.port.OutboxRepository
-import kr.hhplus.be.server.reservation.dto.TempReservationPayload
+import kr.hhplus.be.server.reservation.domain.Reservation
+import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
-import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.SeatFinder
@@ -22,10 +20,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.extension.ExtendWith
-//import org.mockito.ArgumentMatchers.any
-import org.mockito.kotlin.*
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.*
 import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
@@ -41,6 +38,9 @@ class ReservationServiceTest {
     lateinit var memberRepository: MemberRepository
 
     @Mock
+    lateinit var concertRepository: ConcertRepository
+
+    @Mock
     lateinit var outboxRepository: OutboxRepository
 
     @Mock
@@ -54,6 +54,7 @@ class ReservationServiceTest {
             reservationRepository,
             tempReservationService,
             memberRepository,
+            concertRepository,
             1000,
             outboxRepository,
             seatFinder
@@ -65,15 +66,22 @@ class ReservationServiceTest {
     fun make_reservation_test() {
         // Given
         val memberId = "testmember"
-        val date = LocalDate.now()
+        val concertId = 1L
         val seatNumber = 5
-        val request = ReservationRequest(date, memberId, seatNumber)
+        val request = ReservationRequest(concertId, memberId, seatNumber)
 
         val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword")
         val member = memberEntity.toDomain()
+        val concertEntity = ConcertEntity(
+            id = concertId,
+            name = "테스트 콘서트",
+            date = LocalDate.now(),
+            totalSeats = 50
+        )
+        val concert = concertEntity.toDomain()
         val reservationEntity = ReservationEntity(
             id = 1L,
-            date = date,
+            concert = concertEntity,
             seatNumber = seatNumber,
             status = ReservationStatus.PENDING,
             reserver = memberEntity
@@ -81,16 +89,16 @@ class ReservationServiceTest {
         val reservation = reservationEntity.toDomain()
 
         given(memberRepository.findById(memberId)).willReturn(member)
+        given(concertRepository.findById(concertId)).willReturn(concert)
         given(reservationRepository.save(any())).willReturn(reservation)
-        given(seatFinder.getAvailableSeat(any())).willReturn(listOf(seatNumber))
+        given(seatFinder.getAvailableSeats(any())).willReturn(listOf(seatNumber))
 
         // When
         val result = reservationService.make(request)
 
         // Then
-
         assertThat(result.id).isEqualTo(1L)
-        assertThat(result.date).isEqualTo(date)
+        assertThat(result.concert.id).isEqualTo(concertId)
         assertThat(result.seatNumber).isEqualTo(5)
         assertThat(result.status).isEqualTo(ReservationStatus.PENDING)
         assertThat(result.reserver).isNotNull
@@ -108,16 +116,23 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
+        val concertId = 1L
         val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 10000)
         val member = memberEntity.toDomain()
-        val reservationEntity = ReservationEntity(
+        val concertEntity = ConcertEntity(
+            id = concertId,
+            name = "테스트 콘서트",
+            date = LocalDate.of(2025, 11, 18),
+            totalSeats = 50
+        )
+        val concert = concertEntity.toDomain()
+        val reservation = Reservation(
             reservationId,
-            LocalDate.of(2025, 11, 18),
+            concert,
             10,
             ReservationStatus.PENDING,
-            memberEntity
+            member
         )
-        val reservation = reservationEntity.toDomain()
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
         given(memberRepository.findById(memberId)).willReturn(member)
@@ -132,7 +147,7 @@ class ReservationServiceTest {
         assertAll(
             { assertThat(result.status).isEqualTo(ReservationStatus.RESERVE) },
             { assertThat(result.id).isEqualTo(reservationId) },
-            { assertThat(result.date).isEqualTo(LocalDate.of(2025, 11, 18)) }, // 콤마 추가
+            { assertThat(result.concert.date).isEqualTo(LocalDate.of(2025, 11, 18)) },
             { assertThat(result.seatNumber).isEqualTo(10) },
             { assertThat(result.reserver).isNotNull() },
             { assertThat(result.reserver!!.id).isEqualTo(memberId) },
@@ -146,16 +161,23 @@ class ReservationServiceTest {
         //given
         val reservationId = 30L
         val memberId = "testmemberId"
+        val concertId = 1L
         val memberEntity = MemberEntity(id = memberId, username = "Test User", password = "testpassword", point = 500)
         val member = memberEntity.toDomain()
-        val reservationEntity = ReservationEntity(
+        val concertEntity = ConcertEntity(
+            id = concertId,
+            name = "테스트 콘서트",
+            date = LocalDate.of(2025, 11, 18),
+            totalSeats = 50
+        )
+        val concert = concertEntity.toDomain()
+        val reservation = Reservation(
             reservationId,
-            LocalDate.of(2025, 11, 18),
+            concert,
             10,
             ReservationStatus.PENDING,
-            memberEntity
+            member
         )
-        val reservation = reservationEntity.toDomain()
 
         given(tempReservationService.isValidReservation(reservationId)).willReturn(true)
         given(memberRepository.findById(memberId)).willReturn(member)
@@ -165,7 +187,6 @@ class ReservationServiceTest {
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
             RuntimeException::class.java
         )
-
     }
 
     @Test
@@ -180,7 +201,6 @@ class ReservationServiceTest {
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
             RuntimeException::class.java
         )
-
     }
 
     @Test
@@ -198,7 +218,6 @@ class ReservationServiceTest {
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
             RuntimeException::class.java
         )
-
     }
 
     @Test
@@ -217,9 +236,5 @@ class ReservationServiceTest {
         assertThatThrownBy { reservationService.payReservation(reservationId, memberId) }.isInstanceOf(
             RuntimeException::class.java
         )
-
     }
-
-
-
 }

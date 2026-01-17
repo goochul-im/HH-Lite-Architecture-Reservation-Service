@@ -1,18 +1,19 @@
 package kr.hhplus.be.server.integration
 
 import kr.hhplus.be.server.TestcontainersConfiguration
-import kr.hhplus.be.server.reservation.dto.ReservationRequest
+import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
+import kr.hhplus.be.server.concert.infrastructure.ConcertJpaRepository
 import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
 import kr.hhplus.be.server.outbox.scheduler.OutboxScheduler
+import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
-import kr.hhplus.be.server.reservation.service.ReservationService
 import kr.hhplus.be.server.reservation.infrastructure.TempReservationConstant
+import kr.hhplus.be.server.reservation.service.ReservationService
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -21,9 +22,7 @@ import org.redisson.api.RedissonClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.test.context.ActiveProfiles
-import java.time.Duration
 import java.time.LocalDate
 
 @SpringBootTest
@@ -38,9 +37,11 @@ class ReservationIntegrationTest {
     private lateinit var memberJpaRepository: MemberJpaRepository
 
     @Autowired
+    private lateinit var concertJpaRepository: ConcertJpaRepository
+
+    @Autowired
     private lateinit var reservationJpaRepository: ReservationJpaRepository
 
-    // RedisTemplate 대신 RedissonClient 주입
     @Autowired
     private lateinit var redissonClient: RedissonClient
 
@@ -54,18 +55,19 @@ class ReservationIntegrationTest {
     lateinit var tempReservationAdaptor: TempReservationAdaptor
 
     private lateinit var testMemberEntity: MemberEntity
+    private lateinit var testConcert: ConcertEntity
 
     @BeforeEach
     fun setUp() {
-        // 테스트 데이터 정리
         reservationJpaRepository.deleteAll()
+        concertJpaRepository.deleteAll()
         memberJpaRepository.deleteAll()
-
-        // Redisson 방식으로 전체 삭제
         redissonClient.keys.flushall()
 
-        // 테스트용 사용자 생성
         testMemberEntity = memberJpaRepository.save(MemberEntity(username = "Test User", password = "password"))
+        testConcert = concertJpaRepository.save(
+            ConcertEntity(name = "통합 테스트 콘서트", date = LocalDate.now(), totalSeats = 50)
+        )
     }
 
     @AfterEach
@@ -77,9 +79,9 @@ class ReservationIntegrationTest {
     @DisplayName("예약 생성부터 만료까지의 전체 흐름 통합 테스트")
     fun reservation_full_flow_integration_test() {
         // Given: 예약 정보
-        val date = LocalDate.now()
+        val concertId = testConcert.id!!
         val seatNumber = 25
-        val reservationRequest = ReservationRequest(date, testMemberEntity.id!!, seatNumber)
+        val reservationRequest = ReservationRequest(concertId, testMemberEntity.id!!, seatNumber)
 
         // When: 1. 예약을 생성한다.
         reservationService.make(reservationRequest)
@@ -93,7 +95,7 @@ class ReservationIntegrationTest {
 
         val reservationId = savedReservation!!.id!!
         val seatListKey = "${TempReservationConstant.TEMP_RESERVATIONS}$reservationId"
-        val reserveKey = "${TempReservationConstant.CHECK_SEAT}$date"
+        val reserveKey = "${TempReservationConstant.CHECK_SEAT}$concertId"
 
         // Redisson 객체를 통해 확인
         val bucket = redissonClient.getBucket<String>(seatListKey)
@@ -101,13 +103,6 @@ class ReservationIntegrationTest {
 
         assertThat(bucket.isExists).isTrue()
         assertThat(set.contains(seatNumber.toString())).isTrue()
-
-        // When 3 단계 바로 위에서 확인
-        println("Check Key: $seatListKey")
-        println("Exists in Redis: ${redissonClient.getBucket<String>(seatListKey).isExists}")
-
-        // 실제 Redis에 어떤 키들이 있는지 출력
-        redissonClient.keys.getKeys().forEach { println("Actual Key in Redis: $it") }
 
         // When: 3. 예약이 만료될 때 (임시 예약 정리 로직 호출)
         tempReservationAdaptor.cleanupExpiredReservation(reservationId)
