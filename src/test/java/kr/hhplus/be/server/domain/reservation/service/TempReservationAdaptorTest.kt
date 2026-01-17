@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.domain.reservation.service
 
 import jakarta.persistence.EntityNotFoundException
+import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
@@ -33,19 +34,19 @@ class TempReservationAdaptorTest {
     @InjectMocks
     private lateinit var adaptor: TempReservationAdaptor
 
-    private val date = LocalDate.of(2025, 11, 19)
+    private val concertId = 1L
     private val reservationId = 1L
     private val seatNumber = 5
 
     @Test
     fun `save 호출 시 redisOperations의 saveTempReservation 호출`() {
         // When
-        adaptor.save(date, reservationId, seatNumber)
+        adaptor.save(concertId, reservationId, seatNumber)
 
         // Then
         verify(redisOperations).saveTempReservation(
             seatListKey = "temp:reservations:$reservationId",
-            reserveKey = "check:seat:$date",
+            reserveKey = "check:seat:$concertId",
             seatNumber = seatNumber,
             timeoutSeconds = 300L
         )
@@ -55,11 +56,11 @@ class TempReservationAdaptorTest {
     fun `getTempReservation 호출 시 올바른 값 반환`() {
         // Given
         val expectedSeats = listOf(1, 2, 3)
-        given(redisOperations.getTempReservedSeats("check:seat:$date"))
+        given(redisOperations.getTempReservedSeats("check:seat:$concertId"))
             .willReturn(expectedSeats)
 
         // When
-        val result = adaptor.getTempReservation(date)
+        val result = adaptor.getTempReservation(concertId)
 
         // Then
         assertThat(result)
@@ -72,11 +73,11 @@ class TempReservationAdaptorTest {
     @Test
     fun `getTempReservation 빈 목록 반환`() {
         // Given
-        given(redisOperations.getTempReservedSeats("check:seat:$date"))
+        given(redisOperations.getTempReservedSeats("check:seat:$concertId"))
             .willReturn(emptyList())
 
         // When
-        val result = adaptor.getTempReservation(date)
+        val result = adaptor.getTempReservation(concertId)
 
         // Then
         assertThat(result)
@@ -126,9 +127,15 @@ class TempReservationAdaptorTest {
     @Test
     fun `cleanupExpiredReservation 성공`() {
         // Given
+        val concertEntity = ConcertEntity(
+            id = concertId,
+            name = "테스트 콘서트",
+            date = LocalDate.of(2025, 11, 19),
+            totalSeats = 50
+        )
         val reservationEntity = ReservationEntity(
             id = reservationId,
-            date = date,
+            concert = concertEntity,
             seatNumber = seatNumber,
             status = ReservationStatus.PENDING,
             reserver = null
@@ -144,7 +151,7 @@ class TempReservationAdaptorTest {
 
         // Then
         verify(redisOperations, times(1))
-            .removeFromReserveSet("check:seat:$date", seatNumber)
+            .removeFromReserveSet("check:seat:$concertId", seatNumber)
 
         verify(reservationJpaRepository, times(1))
             .save(any())
@@ -185,4 +192,3 @@ class TempReservationAdaptorTest {
             .removeFromReserveSet(anyString(), anyInt())
     }
 }
-

@@ -13,7 +13,6 @@ import kr.hhplus.be.server.reservation.dto.ReservationResponse
 import kr.hhplus.be.server.reservation.port.SeatFinder
 import kr.hhplus.be.server.reservation.service.ReservationFacade
 import kr.hhplus.be.server.reservation.service.ReservationService
-//import org.apache.catalina.User
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.User
@@ -22,9 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.LocalDate
 
 @Tag(name = "예약", description = "콘서트 좌석 예약/조회/결제 관련 API")
 @RestController
@@ -35,16 +32,16 @@ class ReservationController(
     private val reservationFacade: ReservationFacade
 ) {
 
-    @Operation(summary = "콘서트 좌석 예약", description = "특정 날짜의 콘서트 좌석을 예약합니다.")
+    @Operation(summary = "콘서트 좌석 예약", description = "특정 콘서트의 좌석을 예약합니다.")
     @ApiResponse(responseCode = "200", description = "예약 성공", content = [Content(schema = Schema(implementation = ReservationResponse::class))])
     @PostMapping
     fun make(
         @AuthenticationPrincipal user: User,
         @RequestBody req: ReservationMakeRequest
     ): ResponseEntity<ReservationResponse> {
-        val reservation : Reservation = reservationFacade.makeWithLock(
+        val reservation: Reservation = reservationFacade.makeWithLock(
             ReservationRequest(
-                req.date,
+                req.concertId,
                 user.username,
                 req.seatNumber
             )
@@ -53,22 +50,24 @@ class ReservationController(
         return ResponseEntity.ok(
             ReservationResponse(
                 id = reservation.id!!,
-                date = reservation.date,
+                concertId = reservation.concert.id!!,
+                concertName = reservation.concert.name,
+                concertDate = reservation.concert.date,
                 seatNumber = reservation.seatNumber
             )
         )
     }
 
-    @Operation(summary = "예약 가능 좌석 조회", description = "선택한 날짜에 예약 가능한 좌석 목록을 조회합니다.")
+    @Operation(summary = "예약 가능 좌석 조회", description = "특정 콘서트의 예약 가능한 좌석 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공", content = [Content(schema = Schema(implementation = AvailableSeatsResponse::class))])
-    @GetMapping("/date")
+    @GetMapping("/concerts/{concertId}/seats")
     fun getAvailableSeatNumbers(
-        @RequestParam date: LocalDate
+        @PathVariable concertId: Long
     ): ResponseEntity<AvailableSeatsResponse> {
-        val list = seatFinder.getAvailableSeat(date)
+        val list = seatFinder.getAvailableSeats(concertId)
         return ResponseEntity.ok(
             AvailableSeatsResponse(
-                date = date,
+                concertId = concertId,
                 seats = list
             )
         )
@@ -84,18 +83,19 @@ class ReservationController(
         val reservation = reservationService.payReservation(id, user.username)
         return ResponseEntity.ok(
             PayReservationResponse(
-                date = reservation.date,
+                concertId = reservation.concert.id!!,
+                concertName = reservation.concert.name,
+                concertDate = reservation.concert.date,
                 seatNumber = reservation.seatNumber
             )
         )
     }
-
 }
 
 @Schema(description = "좌석 예약 요청")
 data class ReservationMakeRequest(
-    @Schema(description = "예약 날짜", example = "2025-11-26")
-    val date: LocalDate,
+    @Schema(description = "콘서트 ID", example = "1")
+    val concertId: Long,
     @Schema(description = "좌석 번호", example = "12")
     val seatNumber: Int
 )

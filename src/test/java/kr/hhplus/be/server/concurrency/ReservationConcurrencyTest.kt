@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.concurrency
 
 import kr.hhplus.be.server.TestcontainersConfiguration
+import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
+import kr.hhplus.be.server.concert.infrastructure.ConcertJpaRepository
 import kr.hhplus.be.server.member.domain.Member
 import kr.hhplus.be.server.member.port.MemberRepository
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
@@ -37,6 +39,9 @@ class ReservationConcurrencyTest {
     private lateinit var reservationJpaRepository: ReservationJpaRepository
 
     @Autowired
+    private lateinit var concertJpaRepository: ConcertJpaRepository
+
+    @Autowired
     private lateinit var memberRepository: MemberRepository
 
     @Autowired
@@ -45,15 +50,23 @@ class ReservationConcurrencyTest {
     @Autowired
     private lateinit var tempReservationPort: TempReservationPort
 
+    private lateinit var testConcert: ConcertEntity
+
     @BeforeEach
     fun setUp() {
         reservationJpaRepository.deleteAll()
+        concertJpaRepository.deleteAll()
         redisOperation.cleanUp()
+
+        testConcert = concertJpaRepository.save(
+            ConcertEntity(name = "동시성 테스트 콘서트", date = LocalDate.of(2025, 12, 25), totalSeats = 50)
+        )
     }
 
     @AfterEach
     fun tearDown() {
         reservationJpaRepository.deleteAll()
+        concertJpaRepository.deleteAll()
         redisOperation.cleanUp()
     }
 
@@ -64,7 +77,7 @@ class ReservationConcurrencyTest {
         val executorService = Executors.newFixedThreadPool(threadCount)
         val latch = CountDownLatch(threadCount)
 
-        val date = LocalDate.of(2025, 12, 25)
+        val concertId = testConcert.id!!
         val seatNumber = 10
 
         val memberIds = (1..threadCount).map {
@@ -85,7 +98,7 @@ class ReservationConcurrencyTest {
                 try {
                     reservationService.make(
                         ReservationRequest(
-                            date = date,
+                            concertId = concertId,
                             seatNumber = seatNumber,
                             memberId = memberId
                         )
@@ -125,11 +138,11 @@ class ReservationConcurrencyTest {
         val initialPoint = member.point
 
         // 예약 준비
-        val date = LocalDate.of(2025, 12, 26)
+        val concertId = testConcert.id!!
         val seatNumber = 15
-        
+
         val reservationEntity = ReservationEntity(
-            date = date,
+            concert = testConcert,
             seatNumber = seatNumber,
             status = ReservationStatus.PENDING,
             reserver = kr.hhplus.be.server.member.infrastructure.MemberEntity.from(member)
@@ -138,7 +151,7 @@ class ReservationConcurrencyTest {
         val reservationId = savedReservation.id!!
 
         // Redis 임시 예약 상태 설정 (결제 검증 통과용)
-        tempReservationPort.save(date, reservationId, seatNumber)
+        tempReservationPort.save(concertId, reservationId, seatNumber)
 
         val successCount = AtomicInteger(0)
         val failCount = AtomicInteger(0)
@@ -162,13 +175,13 @@ class ReservationConcurrencyTest {
 
         // then
         val finalMember = memberRepository.findById(member.id!!)
-        
+
         println("시도 횟수: $threadCount")
         println("성공 횟수: ${successCount.get()}")
         println("실패 횟수: ${failCount.get()}")
         println("초기 포인트: $initialPoint")
         println("최종 포인트: ${finalMember.point}")
-        
+
         assertThat(successCount.get()).isEqualTo(1)
         assertThat(finalMember.point).isEqualTo(0)
     }

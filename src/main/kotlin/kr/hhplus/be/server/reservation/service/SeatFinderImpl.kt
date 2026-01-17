@@ -1,25 +1,27 @@
 package kr.hhplus.be.server.reservation.service
 
+import kr.hhplus.be.server.concert.port.ConcertRepository
 import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.SeatFinder
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 
 @Component
 class SeatFinderImpl(
     private val reservationRepository: ReservationRepository,
-    private val tempReservationService: TempReservationPort
+    private val tempReservationService: TempReservationPort,
+    private val concertRepository: ConcertRepository
 ) : SeatFinder {
 
-    @Cacheable(value = ["availableSeats"], key = "#date.toString()")
-    override fun getAvailableSeat(date: LocalDate): List<Int> {
-        val seatInPersistent = reservationRepository.getReservedSeatNumber(date).toSet()
-        val seatInTemp = tempReservationService.getTempReservation(date).toSet()
+    @Cacheable(value = ["availableSeats"], key = "#concertId")
+    override fun getAvailableSeats(concertId: Long): List<Int> {
+        val concert = concertRepository.findById(concertId)
+        val totalSeats = concert.totalSeats
 
-        val availableSeat = (1..50).filter { !seatInPersistent.contains(it) && !seatInTemp.contains(it) }
+        val seatInPersistent = reservationRepository.getReservedSeatNumbers(concertId).toSet()
+        val seatInTemp = tempReservationService.getTempReservation(concertId).toSet()
 
-        return availableSeat
+        return (1..totalSeats).filter { !seatInPersistent.contains(it) && !seatInTemp.contains(it) }
     }
 }

@@ -12,12 +12,11 @@ class ReservationFacade(
 ) {
 
     fun makeWithLock(dto: ReservationRequest): Reservation {
-        // 날짜와 좌석번호로 유니크한 키 생성
-        val lockKey = "LOCK:RESERVATION:${dto.date}:${dto.seatNumber}"
+        // 콘서트ID와 좌석번호로 유니크한 키 생성
+        val lockKey = "LOCK:RESERVATION:${dto.concertId}:${dto.seatNumber}"
 
         return lockManager.runWithLock(lockKey) {
             reservationService.make(dto)
         }
     }
-
 }

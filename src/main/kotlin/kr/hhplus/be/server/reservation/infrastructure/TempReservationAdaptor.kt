@@ -2,13 +2,10 @@ package kr.hhplus.be.server.reservation.infrastructure
 
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
-import kr.hhplus.be.server.reservation.infrastructure.TempReservationConstant
 import kr.hhplus.be.server.reservation.port.TempReservationPort
-import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Component
-import java.time.LocalDate
 
 @Component
 class TempReservationAdaptor(
@@ -20,9 +17,9 @@ class TempReservationAdaptor(
     @Value("\${reservation.pending-timeout-seconds}")
     private val pendingTimeoutSeconds: Long = 300L
 
-    override fun save(date: LocalDate, reservationId: Long, seatNumber: Int) {
+    override fun save(concertId: Long, reservationId: Long, seatNumber: Int) {
         val seatListKey = getSeatListKey(reservationId)
-        val reserveKey = getReservedKey(date)
+        val reserveKey = getReservedKey(concertId)
 
         redisOperations.saveTempReservation(
             seatListKey = seatListKey,
@@ -32,31 +29,28 @@ class TempReservationAdaptor(
         )
     }
 
-    override fun getTempReservation(date: LocalDate): List<Int> {
-        val reservationKey = getReservedKey(date)
+    override fun getTempReservation(concertId: Long): List<Int> {
+        val reservationKey = getReservedKey(concertId)
         return redisOperations.getTempReservedSeats(reservationKey)
     }
 
     @Transactional
     override fun cleanupExpiredReservation(reservationId: Long) {
-        // 1. RDB에서 예약 정보 조회
         val reservation = reservationJpaRepository.findById(reservationId).orElseThrow {
             throw EntityNotFoundException("${reservationId}를 가진 예약 정보를 조회할 수 없습니다.")
         }
 
-        // 2. Redis Set에서 좌석 제거
-        val reserveKey = getReservedKey(reservation.date)
+        val concertId = reservation.concert.id!!
+        val reserveKey = getReservedKey(concertId)
         redisOperations.removeFromReserveSet(reserveKey, reservation.seatNumber)
 
         val seatListKey = "${TempReservationConstant.TEMP_RESERVATIONS}$reservationId"
         redisOperations.deleteReservation(seatListKey)
 
-        // 3. RDB 예약 상태 변경
         reservation.status = ReservationStatus.CANCEL
         reservationJpaRepository.save(reservation)
-        
-        // 4. 캐시 무효화
-        cacheManager.getCache("availableSeats")?.evict(reservation.date.toString())
+
+        cacheManager.getCache("availableSeats")?.evict(concertId)
     }
 
     override fun delete(reservationId: Long) {
@@ -69,8 +63,8 @@ class TempReservationAdaptor(
         return redisOperations.isReservationExists(seatListKey)
     }
 
-    private fun getReservedKey(date: LocalDate): String =
-        "${TempReservationConstant.CHECK_SEAT}$date"
+    private fun getReservedKey(concertId: Long): String =
+        "${TempReservationConstant.CHECK_SEAT}$concertId"
 
     private fun getSeatListKey(reservationId: Long): String =
         "${TempReservationConstant.TEMP_RESERVATIONS}$reservationId"
