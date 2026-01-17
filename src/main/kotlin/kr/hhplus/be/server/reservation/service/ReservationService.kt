@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.reservation.service
 
 import jakarta.transaction.Transactional
+import kr.hhplus.be.server.concert.port.ConcertRepository
 import kr.hhplus.be.server.exception.DuplicateResourceException
-import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.member.port.MemberRepository
 import kr.hhplus.be.server.outbox.domain.AggregateType
 import kr.hhplus.be.server.outbox.domain.EventType
@@ -10,26 +10,24 @@ import kr.hhplus.be.server.outbox.domain.OutboxMessage
 import kr.hhplus.be.server.outbox.domain.OutboxStatus
 import kr.hhplus.be.server.outbox.port.OutboxRepository
 import kr.hhplus.be.server.reservation.domain.Reservation
-import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.dto.TempReservationPayload
+import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.port.SeatFinder
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheEvict
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import org.springframework.stereotype.Service
-import java.time.LocalDate
 
 @Service
 class ReservationService(
     private val reservationRepository: ReservationRepository,
     private val tempReservationService: TempReservationPort,
     private val memberRepository: MemberRepository,
+    private val concertRepository: ConcertRepository,
     @param:Value("\${reservation.price}")
     private val price: Int,
     private val outboxRepository: OutboxRepository,
@@ -37,21 +35,21 @@ class ReservationService(
 ) {
 
     @Transactional
-    @CacheEvict(value = ["availableSeats"], key = "#dto.date.toString()")
-    fun make(dto: ReservationRequest) : Reservation {
-
-        if (!seatFinder.getAvailableSeat(dto.date).contains(dto.seatNumber)) {
+    @CacheEvict(value = ["availableSeats"], key = "#dto.concertId")
+    fun make(dto: ReservationRequest): Reservation {
+        if (!seatFinder.getAvailableSeats(dto.concertId).contains(dto.seatNumber)) {
             throw DuplicateResourceException("이미 예약되어있는 좌석입니다.")
         }
 
+        val concert = concertRepository.findById(dto.concertId)
         val reservation = Reservation(
-            date = dto.date,
+            concert = concert,
             seatNumber = dto.seatNumber,
             status = ReservationStatus.PENDING,
             reserver = memberRepository.findById(dto.memberId)
         )
 
-        val save : Reservation = try {
+        val saved: Reservation = try {
             reservationRepository.save(reservation)
         } catch (e: DataIntegrityViolationException) {
             throw DuplicateResourceException("이미 예약되어있는 좌석입니다.")
@@ -60,16 +58,16 @@ class ReservationService(
         val outboxMessage = OutboxMessage(
             aggregateType = AggregateType.TEMP_RESERVATION,
             eventType = EventType.INSERT,
-            payload = TempReservationPayload(save.id!!, save.date, save.seatNumber).toMap(),
+            payload = TempReservationPayload(saved.id!!, saved.concert.id!!, saved.seatNumber).toMap(),
             status = OutboxStatus.PENDING
         )
 
         outboxRepository.save(outboxMessage)
-        return save
+        return saved
     }
 
     @Transactional
-    fun payReservation(reservationId: Long, userId: String) : Reservation {
+    fun payReservation(reservationId: Long, userId: String): Reservation {
         if (!tempReservationService.isValidReservation(reservationId)) {
             throw RuntimeException("예약된 자리가 아닙니다.")
         }
@@ -94,5 +92,4 @@ class ReservationService(
 
         return reservation
     }
-
 }
