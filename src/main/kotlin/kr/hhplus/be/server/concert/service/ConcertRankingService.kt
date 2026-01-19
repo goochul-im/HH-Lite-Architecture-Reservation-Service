@@ -19,5 +19,5 @@ class ConcertRankingService(
         soldOutPort.markSoldOut(concertId, System.currentTimeMillis())
 
     }
-
+    //test
 }
