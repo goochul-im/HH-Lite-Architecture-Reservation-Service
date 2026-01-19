@@ -15,6 +15,7 @@ import kr.hhplus.be.server.common.BaseEntity
 import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
 import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.reservation.domain.Reservation
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 
 @Entity
 @Table(name = "reservation")
@@ -64,8 +65,4 @@ class ReservationEntity(
 }
 
 
-enum class ReservationStatus{
 
-    PENDING, RESERVE, CANCEL
-
-}
