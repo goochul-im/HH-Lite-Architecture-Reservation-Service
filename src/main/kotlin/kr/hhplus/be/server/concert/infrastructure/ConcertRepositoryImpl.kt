@@ -22,7 +22,7 @@ class ConcertRepositoryImpl(
     }
 
     override fun findAllAvailable(fromDate: LocalDate): List<Concert> {
-        return concertJpaRepository.findAllByDateGreaterThanEqual(fromDate)
+        return concertJpaRepository.findAllByDateGreaterThan(fromDate)
             .map { it.toDomain() }
     }
 

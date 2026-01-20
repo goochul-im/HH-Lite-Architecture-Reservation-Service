@@ -35,7 +35,6 @@ class ConcertService(
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = ["concerts"], key = "'available'")
     fun findAvailableConcerts(): List<Concert> {
         return concertRepository.findAllAvailable(LocalDate.now())
     }

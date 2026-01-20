@@ -3,6 +3,7 @@ package kr.hhplus.be.server.auth.security
 object SecurityConstant {
     val PUBLIC_URIS = arrayOf(
         "/api/auth/**",
+        "/api/concerts/**",
         "/api/ranking/**",
         "/v3/api-docs/**",
         "/swagger-ui/**",
