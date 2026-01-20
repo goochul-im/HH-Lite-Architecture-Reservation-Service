@@ -1,7 +1,9 @@
 package kr.hhplus.be.server.reservation.service
 
 import jakarta.transaction.Transactional
+import kr.hhplus.be.server.concert.port.ConcertRankingPort
 import kr.hhplus.be.server.concert.port.ConcertRepository
+import kr.hhplus.be.server.concert.service.ConcertRankingService
 import kr.hhplus.be.server.exception.DuplicateResourceException
 import kr.hhplus.be.server.member.port.MemberRepository
 import kr.hhplus.be.server.outbox.domain.AggregateType
@@ -31,7 +33,8 @@ class ReservationService(
     @param:Value("\${reservation.price}")
     private val price: Int,
     private val outboxRepository: OutboxRepository,
-    private val seatFinder: SeatFinder
+    private val seatFinder: SeatFinder,
+    private val concertRankingPort: ConcertRankingPort
 ) {
 
     @Transactional
@@ -63,6 +66,7 @@ class ReservationService(
         )
 
         outboxRepository.save(outboxMessage)
+        concertRankingPort.checkAndMarkSoldOut(concert.id!!)
         return saved
     }
 

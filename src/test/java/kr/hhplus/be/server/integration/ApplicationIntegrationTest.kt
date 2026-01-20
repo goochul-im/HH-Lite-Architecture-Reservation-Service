@@ -17,7 +17,7 @@ import kr.hhplus.be.server.reservation.controller.ReservationMakeRequest
 import kr.hhplus.be.server.reservation.dto.ReservationResponse
 import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import kr.hhplus.be.server.reservation.service.ReservationFacade
 import org.assertj.core.api.Assertions.assertThat

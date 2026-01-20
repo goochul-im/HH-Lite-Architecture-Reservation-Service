@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.reservation.infrastructure
 
+import kr.hhplus.be.server.concert.domain.Concert
+import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
 import kr.hhplus.be.server.exception.ResourceNotFoundException
 import kr.hhplus.be.server.reservation.domain.Reservation
 import kr.hhplus.be.server.reservation.port.ReservationRepository
@@ -22,5 +24,9 @@ class ReservationRepositoryImpl(
         return repository.findReservationEntityByIdAndReserver_Id(id, reserverId)
             ?.toDomain()
             ?: throw ResourceNotFoundException("예약 id $id ,예약자 id $reserverId 찾기 실패")
+    }
+
+    override fun countByConcert(concert: Concert): Long {
+        return repository.countByConcert(ConcertEntity.from(concert))
     }
 }

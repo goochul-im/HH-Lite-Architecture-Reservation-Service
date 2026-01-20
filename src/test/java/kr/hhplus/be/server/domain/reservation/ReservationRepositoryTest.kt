@@ -5,7 +5,7 @@ import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
 import kr.hhplus.be.server.concert.infrastructure.ConcertJpaRepository
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

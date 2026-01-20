@@ -15,7 +15,6 @@ import kr.hhplus.be.server.outbox.domain.AggregateType
 import kr.hhplus.be.server.outbox.domain.EventType
 import kr.hhplus.be.server.outbox.domain.OutboxMessage
 import kr.hhplus.be.server.outbox.domain.OutboxStatus
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
 import java.time.LocalDateTime
 
 @Entity

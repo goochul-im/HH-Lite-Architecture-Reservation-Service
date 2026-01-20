@@ -12,7 +12,7 @@ import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import kr.hhplus.be.server.reservation.service.ReservationService
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach

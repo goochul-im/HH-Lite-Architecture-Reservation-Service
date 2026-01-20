@@ -4,7 +4,7 @@ import kr.hhplus.be.server.common.port.DistributeLockManager
 import kr.hhplus.be.server.concert.domain.Concert
 import kr.hhplus.be.server.reservation.domain.Reservation
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
