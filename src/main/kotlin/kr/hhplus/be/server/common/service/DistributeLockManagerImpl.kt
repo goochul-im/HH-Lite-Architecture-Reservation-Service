@@ -21,7 +21,7 @@ class DistributeLockManagerImpl(
 
         try {
             // 획득을 5초 기다리고, 획득 후 2초 지나고 자동으로 해제됨
-            val available = lock.tryLock(5, 2, TimeUnit.SECONDS)
+            val available = lock.tryLock(5, -1, TimeUnit.SECONDS)
 
             if (!available) {
                 log.error("분산 락 획득 실패")
