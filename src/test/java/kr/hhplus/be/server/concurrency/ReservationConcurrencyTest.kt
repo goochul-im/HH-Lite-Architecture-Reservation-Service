@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.concurrency
 
 import kr.hhplus.be.server.TestcontainersConfiguration
+import kr.hhplus.be.server.common.port.DistributeLockManager
 import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
 import kr.hhplus.be.server.concert.infrastructure.ConcertJpaRepository
 import kr.hhplus.be.server.member.domain.Member
@@ -13,6 +14,7 @@ import kr.hhplus.be.server.reservation.port.TempReservationPort
 import kr.hhplus.be.server.reservation.service.ReservationService
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.service.ReservationFacade
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -50,6 +52,13 @@ class ReservationConcurrencyTest {
     @Autowired
     private lateinit var tempReservationPort: TempReservationPort
 
+    @Autowired
+    private lateinit var reservationFacade: ReservationFacade
+
+    @Autowired
+    private lateinit var lockManager: DistributeLockManager
+
+
     private lateinit var testConcert: ConcertEntity
 
     @BeforeEach
@@ -71,7 +80,62 @@ class ReservationConcurrencyTest {
     }
 
     @Test
-    fun `동시에 30명이 같은 날짜 같은 좌석을 예약하면 1명만 성공해야 한다`() {
+    fun `동시에 30명이 같은 날짜 같은 좌석을 예약하면 분산 락에 의해 1명만 성공해야 한다`() {
+        // given
+        val threadCount = 30
+        val executorService = Executors.newFixedThreadPool(threadCount)
+        val latch = CountDownLatch(threadCount)
+
+        val concertId = testConcert.id!!
+        val seatNumber = 10
+
+        val memberIds = (1..threadCount).map {
+            val member = Member(
+                username = "tester$it",
+                password = "testerPassword"
+            )
+            memberRepository.save(member).id!!
+        }
+
+        val successCount = AtomicInteger(0)
+        val failCount = AtomicInteger(0)
+
+        // when
+        for (i in 0 until threadCount) {
+            val memberId = memberIds[i]
+            executorService.submit {
+                try {
+                    reservationFacade.makeWithLock(
+                        ReservationRequest(
+                            concertId = concertId,
+                            seatNumber = seatNumber,
+                            memberId = memberId
+                        )
+                    )
+
+                    successCount.incrementAndGet()
+                } catch (e: Exception) {
+                    failCount.incrementAndGet()
+                } finally {
+                    latch.countDown()
+                }
+            }
+        }
+
+        latch.await()
+        // then
+        val reservations = reservationJpaRepository.findAll()
+
+        println("시도 횟수: $threadCount")
+        println("성공 횟수: ${successCount.get()}")
+        println("실패 횟수: ${failCount.get()}")
+        println("DB 저장된 예약 수: ${reservations.size}")
+
+        assertThat(reservations.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `동시에 30명이 같은 날짜 같은 좌석을 예약하면 유니크 키에 의해 1명만 성공해야 한다`() {
         // given
         val threadCount = 30
         val executorService = Executors.newFixedThreadPool(threadCount)
