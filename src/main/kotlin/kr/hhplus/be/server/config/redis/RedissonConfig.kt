@@ -19,6 +19,7 @@ class RedissonConfig(
         val config = Config()
         config.useSingleServer().address = "redis://$host:$port"
         config.codec = StringCodec.INSTANCE
+        config.lockWatchdogTimeout = 15000 // watchdog timeout 15초
         return Redisson.create(config)
     }
 
