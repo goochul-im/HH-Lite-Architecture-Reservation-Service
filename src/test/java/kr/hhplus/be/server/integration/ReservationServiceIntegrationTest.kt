@@ -10,7 +10,7 @@ import kr.hhplus.be.server.outbox.domain.OutboxStatus
 import kr.hhplus.be.server.outbox.port.OutboxRepository
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.service.ReservationService
 import org.assertj.core.api.Assertions.assertThat

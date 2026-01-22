@@ -2,6 +2,7 @@ package kr.hhplus.be.server.reservation.infrastructure
 
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager

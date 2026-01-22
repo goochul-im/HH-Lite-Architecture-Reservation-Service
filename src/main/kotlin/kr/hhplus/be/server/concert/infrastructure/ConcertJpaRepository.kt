@@ -7,5 +7,5 @@ import java.time.LocalDate
 @Repository
 interface ConcertJpaRepository : JpaRepository<ConcertEntity, Long> {
     fun findByDate(date: LocalDate): ConcertEntity?
-    fun findAllByDateGreaterThanEqual(date: LocalDate): List<ConcertEntity>
+    fun findAllByDateGreaterThan(date: LocalDate): List<ConcertEntity>
 }

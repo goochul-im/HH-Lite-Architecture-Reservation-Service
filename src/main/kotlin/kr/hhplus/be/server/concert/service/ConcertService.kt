@@ -2,6 +2,7 @@ package kr.hhplus.be.server.concert.service
 
 import kr.hhplus.be.server.concert.domain.Concert
 import kr.hhplus.be.server.concert.dto.ConcertCreateRequest
+import kr.hhplus.be.server.concert.port.ConcertRankingPort
 import kr.hhplus.be.server.concert.port.ConcertRepository
 import kr.hhplus.be.server.exception.DuplicateResourceException
 import org.springframework.cache.annotation.Cacheable
@@ -11,7 +12,7 @@ import java.time.LocalDate
 
 @Service
 class ConcertService(
-    private val concertRepository: ConcertRepository
+    private val concertRepository: ConcertRepository,
 ) {
 
     @Transactional
@@ -34,7 +35,6 @@ class ConcertService(
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = ["concerts"], key = "'available'")
     fun findAvailableConcerts(): List<Concert> {
         return concertRepository.findAllAvailable(LocalDate.now())
     }

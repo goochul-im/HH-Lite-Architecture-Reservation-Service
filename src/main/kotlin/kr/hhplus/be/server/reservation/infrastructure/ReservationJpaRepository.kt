@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.reservation.infrastructure
 
+import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -16,5 +17,7 @@ interface ReservationJpaRepository : JpaRepository<ReservationEntity, Long> {
         id: Long,
         reserverId: String
     ): ReservationEntity?
+
+    fun countByConcert(concert: ConcertEntity): Long
 
 }

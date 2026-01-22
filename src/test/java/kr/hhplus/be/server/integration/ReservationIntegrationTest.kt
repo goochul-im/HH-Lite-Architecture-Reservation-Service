@@ -9,7 +9,7 @@ import kr.hhplus.be.server.outbox.scheduler.OutboxScheduler
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
-import kr.hhplus.be.server.reservation.infrastructure.ReservationStatus
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
 import kr.hhplus.be.server.reservation.infrastructure.TempReservationConstant
 import kr.hhplus.be.server.reservation.service.ReservationService

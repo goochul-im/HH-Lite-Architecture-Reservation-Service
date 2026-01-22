@@ -30,3 +30,13 @@ data class ConcertListResponse(
     @Schema(description = "콘서트 목록")
     val concerts: List<ConcertResponse>
 )
+
+@Schema(description = "콘서트 랭킹 응답")
+data class ConcertRankingResponse(
+    @Schema(description = "콘서트 id")
+    val concertId: Long,
+    @Schema(description = "콘서트 이름")
+    val concertName: String,
+    @Schema(description = "콘서트 매진 랭킹")
+    val rank: Long
+)

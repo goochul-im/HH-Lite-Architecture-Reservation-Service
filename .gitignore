@@ -37,3 +37,6 @@ out/
 .vscode/
 
 data
+AGENTS.md
+/.claude/
+/.sisyphus/

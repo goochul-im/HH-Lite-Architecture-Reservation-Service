@@ -4,6 +4,7 @@ import kr.hhplus.be.server.concert.domain.Concert
 import kr.hhplus.be.server.exception.ResourceNotFoundException
 import kr.hhplus.be.server.member.domain.Member
 import kr.hhplus.be.server.reservation.domain.Reservation
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
