@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.reservation.event.listener
 
 import kr.hhplus.be.server.concert.port.ConcertRankingPort
+import kr.hhplus.be.server.external.DataFlatformPort
 import kr.hhplus.be.server.reservation.event.ReservationCreatedEvent
 import kr.hhplus.be.server.reservation.event.ReservationExpiredEvent
 import kr.hhplus.be.server.reservation.event.ReservationPaidEvent
@@ -28,6 +29,9 @@ class ReservationAfterCommitEventListenerTest {
 
     @Mock
     private lateinit var cache: Cache
+
+    @Mock
+    private lateinit var dataFlatformPort: DataFlatformPort
 
     @InjectMocks
     private lateinit var listener: ReservationAfterCommitEventListener
