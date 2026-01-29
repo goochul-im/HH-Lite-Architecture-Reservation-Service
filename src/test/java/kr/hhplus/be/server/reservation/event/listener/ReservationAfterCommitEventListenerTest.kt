@@ -43,7 +43,7 @@ class ReservationAfterCommitEventListenerTest {
         )
 
         // when
-        listener.handleSoldOutCheck(event)
+        listener.handleReservationCreate(event)
 
         // then
         verify(concertRankingPort).checkAndMarkSoldOut(10L)
@@ -59,7 +59,7 @@ class ReservationAfterCommitEventListenerTest {
         )
 
         // when
-        listener.handleTempReservationCleanup(event)
+        listener.handleReservationPaid(event)
 
         // then
         verify(tempReservationPort).delete(1L)
@@ -75,7 +75,7 @@ class ReservationAfterCommitEventListenerTest {
         org.mockito.kotlin.given(cacheManager.getCache("availableSeats")).willReturn(cache)
 
         // when
-        listener.handleCacheEviction(event)
+        listener.handleReservationExpired(event)
 
         // then
         verify(cacheManager).getCache("availableSeats")
