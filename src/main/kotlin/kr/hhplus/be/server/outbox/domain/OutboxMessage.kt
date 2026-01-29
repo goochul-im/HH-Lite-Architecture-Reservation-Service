@@ -12,7 +12,7 @@ class OutboxMessage(
 )
 
 enum class AggregateType{
-    TEMP_RESERVATION,
+    TEMP_RESERVATION, RESERVATION, POINT
 }
 
 enum class EventType{
