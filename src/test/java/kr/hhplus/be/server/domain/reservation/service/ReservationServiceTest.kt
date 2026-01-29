@@ -2,13 +2,14 @@ package kr.hhplus.be.server.domain.reservation.service
 
 import kr.hhplus.be.server.concert.domain.Concert
 import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
-import kr.hhplus.be.server.concert.port.ConcertRankingPort
+import kr.hhplus.be.server.common.event.DomainEventPublisher
 import kr.hhplus.be.server.concert.port.ConcertRepository
 import kr.hhplus.be.server.member.infrastructure.MemberEntity
 import kr.hhplus.be.server.member.port.MemberRepository
-import kr.hhplus.be.server.outbox.port.OutboxRepository
 import kr.hhplus.be.server.reservation.domain.Reservation
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
+import kr.hhplus.be.server.reservation.event.ReservationCreatedEvent
+import kr.hhplus.be.server.reservation.event.ReservationPaidEvent
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.port.ReservationRepository
@@ -42,13 +43,10 @@ class ReservationServiceTest {
     lateinit var concertRepository: ConcertRepository
 
     @Mock
-    lateinit var outboxRepository: OutboxRepository
-
-    @Mock
     lateinit var seatFinder: SeatFinder
 
     @Mock
-    lateinit var concertRankingPort: ConcertRankingPort
+    lateinit var eventPublisher: DomainEventPublisher
 
     private lateinit var reservationService: ReservationService
 
@@ -60,9 +58,8 @@ class ReservationServiceTest {
             memberRepository,
             concertRepository,
             1000,
-            outboxRepository,
             seatFinder,
-            concertRankingPort
+            eventPublisher
         )
     }
 
@@ -113,7 +110,7 @@ class ReservationServiceTest {
         assertThat(result.reserver!!.password).isEqualTo("testpassword")
 
         verify(reservationRepository, times(1)).save(any())
-        verify(outboxRepository, times(1)).save(any())
+        verify(eventPublisher, times(1)).publish(any<ReservationCreatedEvent>())
     }
 
     @Test
@@ -159,6 +156,8 @@ class ReservationServiceTest {
             { assertThat(result.reserver!!.username).isEqualTo("Test User") },
             { assertThat(result.reserver!!.point).isEqualTo(9000) }
         )
+
+        verify(eventPublisher, times(1)).publish(any<ReservationPaidEvent>())
     }
 
     @Test
