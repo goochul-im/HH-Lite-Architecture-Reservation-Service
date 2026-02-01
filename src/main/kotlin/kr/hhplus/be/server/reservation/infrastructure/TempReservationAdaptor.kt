@@ -2,17 +2,18 @@ package kr.hhplus.be.server.reservation.infrastructure
 
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
+import kr.hhplus.be.server.common.event.DomainEventPublisher
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.event.ReservationExpiredEvent
 import kr.hhplus.be.server.reservation.port.TempReservationPort
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.cache.CacheManager
 import org.springframework.stereotype.Component
 
 @Component
 class TempReservationAdaptor(
     private val redisOperations: RedisReservationOperations,
     private val reservationJpaRepository: ReservationJpaRepository,
-    private val cacheManager: CacheManager
+    private val eventPublisher: DomainEventPublisher,
 ) : TempReservationPort {
 
     @Value("\${reservation.pending-timeout-seconds}")
@@ -37,9 +38,8 @@ class TempReservationAdaptor(
 
     @Transactional
     override fun cleanupExpiredReservation(reservationId: Long) {
-        val reservation = reservationJpaRepository.findById(reservationId).orElseThrow {
+        val reservation = reservationJpaRepository.findByIdFetchConcert(reservationId) ?:
             throw EntityNotFoundException("${reservationId}를 가진 예약 정보를 조회할 수 없습니다.")
-        }
 
         val concertId = reservation.concert.id!!
         val reserveKey = getReservedKey(concertId)
@@ -51,7 +51,10 @@ class TempReservationAdaptor(
         reservation.status = ReservationStatus.CANCEL
         reservationJpaRepository.save(reservation)
 
-        cacheManager.getCache("availableSeats")?.evict(concertId)
+        eventPublisher.publish(ReservationExpiredEvent(
+            reservation.id!!,
+            reservation.concert.id
+        ))
     }
 
     override fun delete(reservationId: Long) {

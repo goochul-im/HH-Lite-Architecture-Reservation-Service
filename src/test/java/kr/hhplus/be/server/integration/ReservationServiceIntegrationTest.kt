@@ -7,10 +7,11 @@ import kr.hhplus.be.server.member.port.MemberRepository
 import kr.hhplus.be.server.outbox.domain.AggregateType
 import kr.hhplus.be.server.outbox.domain.EventType
 import kr.hhplus.be.server.outbox.domain.OutboxStatus
-import kr.hhplus.be.server.outbox.port.OutboxRepository
 import kr.hhplus.be.server.reservation.dto.ReservationRequest
 import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.outbox.infrastructure.OutboxJpaRepository
+import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
 import kr.hhplus.be.server.reservation.port.ReservationRepository
 import kr.hhplus.be.server.reservation.service.ReservationService
 import org.assertj.core.api.Assertions.assertThat
@@ -20,12 +21,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional
 class ReservationServiceIntegrationTest {
 
     @Autowired
@@ -38,18 +37,23 @@ class ReservationServiceIntegrationTest {
     private lateinit var concertRepository: ConcertRepository
 
     @Autowired
-    private lateinit var outboxRepository: OutboxRepository
-
-    @Autowired
     private lateinit var memberRepository: MemberRepository
 
     @Autowired
     lateinit var redisReservationOperations: RedisReservationOperations
 
+    @Autowired
+    lateinit var reservationJpaRepository: ReservationJpaRepository
+
+    @Autowired
+    lateinit var outboxJpaRepository: OutboxJpaRepository
+
     @BeforeEach
     @AfterEach
-    fun redisCleanup() {
+    fun cleanup() {
         redisReservationOperations.cleanUp()
+        reservationJpaRepository.deleteAllInBatch()
+        outboxJpaRepository.deleteAllInBatch()
     }
 
     @Test
@@ -80,17 +84,18 @@ class ReservationServiceIntegrationTest {
         assertThat(savedReservation.status).isEqualTo(ReservationStatus.PENDING)
 
         // 2. 아웃박스 메시지 검증
-        val pendingMessages = outboxRepository.getPendingList()
-        assertThat(pendingMessages).isNotEmpty
+        val allOutbox = outboxJpaRepository.findAll()
+        assertThat(allOutbox).isNotEmpty
 
-        val targetMessage = pendingMessages.find {
+        val targetEntity = allOutbox.find {
             it.aggregateType == AggregateType.TEMP_RESERVATION &&
                 it.eventType == EventType.INSERT &&
                 it.status == OutboxStatus.PENDING
         }
 
-        assertThat(targetMessage).isNotNull
-        assertThat(targetMessage?.status).isEqualTo(OutboxStatus.PENDING)
+        assertThat(targetEntity).isNotNull
+        assertThat(targetEntity?.status).isEqualTo(OutboxStatus.PENDING)
+        val targetMessage = targetEntity?.toDomain()
         assertThat(targetMessage?.payload).containsEntry("seatNumber", seatNumber)
     }
 }

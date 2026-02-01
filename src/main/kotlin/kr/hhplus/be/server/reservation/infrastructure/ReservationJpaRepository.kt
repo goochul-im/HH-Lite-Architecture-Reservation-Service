@@ -20,4 +20,7 @@ interface ReservationJpaRepository : JpaRepository<ReservationEntity, Long> {
 
     fun countByConcert(concert: ConcertEntity): Long
 
+    @Query("select r from ReservationEntity r join fetch r.concert")
+    fun findByIdFetchConcert(id: Long): ReservationEntity?
+
 }

@@ -1,12 +1,14 @@
 package kr.hhplus.be.server.domain.reservation.service
 
 import jakarta.persistence.EntityNotFoundException
+import kr.hhplus.be.server.common.event.DomainEventPublisher
 import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
+import kr.hhplus.be.server.reservation.domain.ReservationStatus
+import kr.hhplus.be.server.reservation.event.ReservationExpiredEvent
+import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import kr.hhplus.be.server.reservation.infrastructure.ReservationEntity
 import kr.hhplus.be.server.reservation.infrastructure.ReservationJpaRepository
-import kr.hhplus.be.server.reservation.domain.ReservationStatus
 import kr.hhplus.be.server.reservation.infrastructure.TempReservationAdaptor
-import kr.hhplus.be.server.reservation.infrastructure.RedisReservationOperations
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -15,9 +17,8 @@ import org.mockito.BDDMockito.*
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.cache.CacheManager
+import org.mockito.kotlin.any
 import java.time.LocalDate
-import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class TempReservationAdaptorTest {
@@ -29,7 +30,7 @@ class TempReservationAdaptorTest {
     private lateinit var reservationJpaRepository: ReservationJpaRepository
 
     @Mock
-    private lateinit var cacheManager: CacheManager
+    private lateinit var eventPublisher: DomainEventPublisher
 
     @InjectMocks
     private lateinit var adaptor: TempReservationAdaptor
@@ -141,8 +142,8 @@ class TempReservationAdaptorTest {
             reserver = null
         )
 
-        given(reservationJpaRepository.findById(reservationId))
-            .willReturn(Optional.of(reservationEntity))
+        given(reservationJpaRepository.findByIdFetchConcert(reservationId))
+            .willReturn(reservationEntity)
         given(reservationJpaRepository.save(any()))
             .willReturn(reservationEntity)
 
@@ -156,6 +157,9 @@ class TempReservationAdaptorTest {
         verify(reservationJpaRepository, times(1))
             .save(any())
 
+        verify(eventPublisher, times(1))
+            .publish(any<ReservationExpiredEvent>())
+
         assertThat(reservationEntity.status)
             .isNotNull
             .isEqualTo(ReservationStatus.CANCEL)
@@ -164,8 +168,8 @@ class TempReservationAdaptorTest {
     @Test
     fun `cleanupExpiredReservation 예약이 없을 때 EntityNotFoundException 발생`() {
         // Given
-        given(reservationJpaRepository.findById(reservationId))
-            .willReturn(Optional.empty())
+        given(reservationJpaRepository.findByIdFetchConcert(reservationId))
+            .willReturn(null)
 
         // When & Then
         assertThatThrownBy {
@@ -178,8 +182,8 @@ class TempReservationAdaptorTest {
     @Test
     fun `cleanupExpiredReservation 예약 없을 때 Redis 작업 미실행`() {
         // Given
-        given(reservationJpaRepository.findById(reservationId))
-            .willReturn(Optional.empty())
+        given(reservationJpaRepository.findByIdFetchConcert(reservationId))
+            .willReturn(null)
 
         // When & Then
         assertThatThrownBy {

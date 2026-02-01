@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import jakarta.transaction.Transactional
 import kr.hhplus.be.server.TestcontainersConfiguration
 import kr.hhplus.be.server.application.point.controller.UsePointReq
 import kr.hhplus.be.server.application.point.dto.PointResponse
@@ -12,6 +11,7 @@ import kr.hhplus.be.server.concert.infrastructure.ConcertEntity
 import kr.hhplus.be.server.concert.infrastructure.ConcertJpaRepository
 import kr.hhplus.be.server.member.infrastructure.MemberJpaRepository
 import kr.hhplus.be.server.member.service.MemberService
+import kr.hhplus.be.server.outbox.infrastructure.OutboxJpaRepository
 import kr.hhplus.be.server.outbox.scheduler.OutboxScheduler
 import kr.hhplus.be.server.reservation.controller.ReservationMakeRequest
 import kr.hhplus.be.server.reservation.dto.ReservationResponse
@@ -41,7 +41,6 @@ import java.time.LocalDate
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration::class)
 @ActiveProfiles("test")
-@Transactional
 class ApplicationIntegrationTest {
 
     @Autowired
@@ -76,6 +75,9 @@ class ApplicationIntegrationTest {
 
     @Autowired
     lateinit var outboxScheduler: OutboxScheduler
+
+    @Autowired
+    lateinit var outboxJpaRepository: OutboxJpaRepository
 
     lateinit var accessToken: String
     lateinit var waitingToken: String
@@ -122,7 +124,11 @@ class ApplicationIntegrationTest {
     }
 
     @AfterEach
-    fun cleanUpRedis() {
+    fun cleanup() {
+        reservationRepository.deleteAll()
+        outboxJpaRepository.deleteAllInBatch()
+        concertRepository.deleteAll()
+        memberRepository.deleteAll()
         redisOperation.cleanUp()
     }
 

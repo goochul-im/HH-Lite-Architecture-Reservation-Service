@@ -61,7 +61,7 @@ dependencies {
 	testImplementation("org.testcontainers:mysql")
 	testImplementation("org.awaitility:awaitility-kotlin:4.2.1")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.testcontainers:testcontainers:1.17.2")
+    testImplementation("org.testcontainers:testcontainers")
     testImplementation ("com.h2database:h2")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
 
